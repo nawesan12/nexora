@@ -1,0 +1,9 @@
+{
+  "extends": "@nexora/config/typescript/base",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}

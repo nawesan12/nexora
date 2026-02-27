@@ -1,0 +1,39 @@
+export const EstadoPedido = {
+  PENDIENTE_APROBACION: "PENDIENTE_APROBACION",
+  EN_EVALUACION: "EN_EVALUACION",
+  APROBADO: "APROBADO",
+  APROBADO_REPARTIDOR: "APROBADO_REPARTIDOR",
+  RECHAZADO: "RECHAZADO",
+  EN_CONSOLIDACION: "EN_CONSOLIDACION",
+  EN_PREPARACION: "EN_PREPARACION",
+  LISTO_PARA_ENVIO: "LISTO_PARA_ENVIO",
+  ENVIADO: "ENVIADO",
+  ENTREGADO: "ENTREGADO",
+  ABASTECIDO: "ABASTECIDO",
+  ENTREGADO_PARCIALMENTE: "ENTREGADO_PARCIALMENTE",
+  CANCELADO: "CANCELADO",
+  RECLAMADO: "RECLAMADO",
+  PENDIENTE_ABASTECIMIENTO: "PENDIENTE_ABASTECIMIENTO",
+  NO_ENTREGADO: "NO_ENTREGADO",
+} as const;
+
+export type EstadoPedido = (typeof EstadoPedido)[keyof typeof EstadoPedido];
+
+export const ORDER_STATUS_LABELS: Record<EstadoPedido, string> = {
+  PENDIENTE_APROBACION: "Pendiente de Aprobación",
+  EN_EVALUACION: "En Evaluación",
+  APROBADO: "Aprobado",
+  APROBADO_REPARTIDOR: "Aprobado por Repartidor",
+  RECHAZADO: "Rechazado",
+  EN_CONSOLIDACION: "En Consolidación",
+  EN_PREPARACION: "En Preparación",
+  LISTO_PARA_ENVIO: "Listo para Envío",
+  ENVIADO: "Enviado",
+  ENTREGADO: "Entregado",
+  ABASTECIDO: "Abastecido",
+  ENTREGADO_PARCIALMENTE: "Entregado Parcialmente",
+  CANCELADO: "Cancelado",
+  RECLAMADO: "Reclamado",
+  PENDIENTE_ABASTECIMIENTO: "Pendiente de Abastecimiento",
+  NO_ENTREGADO: "No Entregado",
+};

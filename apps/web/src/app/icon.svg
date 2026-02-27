@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#312E81"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="120" y1="112" x2="392" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C4B5FD"/>
+      <stop offset="50%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <rect x="2" y="2" width="508" height="508" rx="106" fill="none" stroke="#4338CA" stroke-width="1" opacity="0.3"/>
+  <!-- N lettermark: left bar -->
+  <rect x="120" y="128" width="52" height="256" rx="8" fill="url(#mark)"/>
+  <!-- N lettermark: right bar -->
+  <rect x="340" y="128" width="52" height="256" rx="8" fill="url(#mark)"/>
+  <!-- N lettermark: diagonal (top-left to bottom-right = correct N) -->
+  <path d="M172 160 L340 352 L340 304 L172 112 Z" fill="url(#mark)" opacity="0.9"/>
+  <!-- Accent spark -->
+  <g filter="glow" opacity="0.85">
+    <path d="M408 108 L418 128 L408 148 L398 128 Z" fill="#C4B5FD"/>
+  </g>
+  <!-- Subtle reflection -->
+  <rect x="160" y="404" width="192" height="3" rx="1.5" fill="#A78BFA" opacity="0.2"/>
+</svg>
