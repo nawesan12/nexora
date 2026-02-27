@@ -13,6 +13,7 @@ build/
 # Go
 apps/api/tmp/
 apps/api/bin/
+apps/api/server
 
 # Environment
 .env
