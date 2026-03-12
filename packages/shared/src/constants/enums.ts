@@ -1,3 +1,31 @@
+// Invoicing - Estado
+export const EstadoComprobante = {
+  BORRADOR: "BORRADOR",
+  EMITIDO: "EMITIDO",
+  ANULADO: "ANULADO",
+} as const;
+export type EstadoComprobante =
+  (typeof EstadoComprobante)[keyof typeof EstadoComprobante];
+
+export const ESTADO_COMPROBANTE_LABELS: Record<string, string> = {
+  BORRADOR: "Borrador",
+  EMITIDO: "Emitido",
+  ANULADO: "Anulado",
+};
+
+export const TIPO_COMPROBANTE_LABELS: Record<string, string> = {
+  FACTURA: "Factura",
+  NOTA_CREDITO: "Nota de Crédito",
+  NOTA_DEBITO: "Nota de Débito",
+};
+
+export const LETRA_COMPROBANTE_LABELS: Record<string, string> = {
+  A: "A",
+  B: "B",
+  N: "N",
+  X: "X",
+};
+
 // Delivery
 export const EstadoReparto = {
   PLANIFICADO: "PLANIFICADO",
@@ -188,3 +216,93 @@ export const TipoEvento = {
   COBRO: "COBRO",
 } as const;
 export type TipoEvento = (typeof TipoEvento)[keyof typeof TipoEvento];
+
+// Employee HR
+export const EstadoEmpleado = {
+  ACTIVO: "ACTIVO",
+  LICENCIA: "LICENCIA",
+  DESVINCULADO: "DESVINCULADO",
+} as const;
+export type EstadoEmpleado = (typeof EstadoEmpleado)[keyof typeof EstadoEmpleado];
+
+export const TipoContrato = {
+  RELACION_DEPENDENCIA: "RELACION_DEPENDENCIA",
+  MONOTRIBUTO: "MONOTRIBUTO",
+  EVENTUAL: "EVENTUAL",
+} as const;
+export type TipoContrato = (typeof TipoContrato)[keyof typeof TipoContrato];
+
+export const ESTADO_EMPLEADO_LABELS: Record<string, string> = {
+  ACTIVO: "Activo",
+  LICENCIA: "Licencia",
+  DESVINCULADO: "Desvinculado",
+};
+
+export const TIPO_CONTRATO_LABELS: Record<string, string> = {
+  RELACION_DEPENDENCIA: "Rel. Dependencia",
+  MONOTRIBUTO: "Monotributo",
+  EVENTUAL: "Eventual",
+};
+
+// Estado Transferencia
+export const EstadoTransferencia = {
+  PENDIENTE: "PENDIENTE",
+  APROBADA: "APROBADA",
+  EN_TRANSITO: "EN_TRANSITO",
+  COMPLETADA: "COMPLETADA",
+  CANCELADA: "CANCELADA",
+} as const;
+export type EstadoTransferencia = (typeof EstadoTransferencia)[keyof typeof EstadoTransferencia];
+
+export const ESTADO_TRANSFERENCIA_LABELS: Record<string, string> = {
+  PENDIENTE: "Pendiente",
+  APROBADA: "Aprobada",
+  EN_TRANSITO: "En Tránsito",
+  COMPLETADA: "Completada",
+  CANCELADA: "Cancelada",
+};
+
+// Purchase Orders
+export const EstadoOrdenCompra = {
+  BORRADOR: "BORRADOR",
+  APROBADA: "APROBADA",
+  EN_RECEPCION: "EN_RECEPCION",
+  RECIBIDA: "RECIBIDA",
+  RECIBIDA_PARCIALMENTE: "RECIBIDA_PARCIALMENTE",
+  CANCELADA: "CANCELADA",
+} as const;
+export type EstadoOrdenCompra = (typeof EstadoOrdenCompra)[keyof typeof EstadoOrdenCompra];
+
+export const ESTADO_ORDEN_COMPRA_LABELS: Record<string, string> = {
+  BORRADOR: "Borrador",
+  APROBADA: "Aprobada",
+  EN_RECEPCION: "En Recepción",
+  RECIBIDA: "Recibida",
+  RECIBIDA_PARCIALMENTE: "Recibida Parcialmente",
+  CANCELADA: "Cancelada",
+};
+
+// Labels for existing enums that may be missing
+export const ESTADO_REPARTO_LABELS: Record<string, string> = {
+  PLANIFICADO: "Planificado",
+  EN_CURSO: "En Curso",
+  FINALIZADO: "Finalizado",
+  CANCELADO: "Cancelado",
+};
+
+export const TIPO_EVENTO_LABELS: Record<string, string> = {
+  LLEGADA: "Llegada",
+  ENTREGA: "Entrega",
+  NO_ENTREGA: "No Entrega",
+  ENTREGA_PARCIAL: "Entrega Parcial",
+  COBRO: "Cobro",
+};
+
+export const TIPO_MOVIMIENTO_STOCK_LABELS: Record<string, string> = {
+  COMPRA: "Compra",
+  VENTA: "Venta",
+  AJUSTE: "Ajuste",
+  TRANSFERENCIA: "Transferencia",
+  DEVOLUCION: "Devolución",
+  QUIEBRE: "Quiebre",
+};

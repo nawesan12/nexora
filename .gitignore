@@ -40,3 +40,8 @@ pnpm-debug.log*
 
 # Test coverage
 coverage/
+
+CLAUDE.md
+.playwright-mcp
+.claude
+

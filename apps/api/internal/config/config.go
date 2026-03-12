@@ -16,7 +16,8 @@ type Config struct {
 
 	// JWT
 	JWTSecret        string `envconfig:"JWT_SECRET" required:"true"`
-	JWTExpiry        string `envconfig:"JWT_EXPIRY" default:"24h"`
+	JWTRefreshSecret string `envconfig:"JWT_REFRESH_SECRET" default:""`
+	JWTExpiry        string `envconfig:"JWT_EXPIRY" default:"15m"`
 	JWTRefreshExpiry string `envconfig:"JWT_REFRESH_EXPIRY" default:"168h"`
 
 	// CORS

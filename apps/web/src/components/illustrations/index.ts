@@ -1,0 +1,14 @@
+export { EmptyGeneric } from "./empty-generic";
+export { EmptyOrders } from "./empty-orders";
+export { EmptyProducts } from "./empty-products";
+export { EmptyClients } from "./empty-clients";
+export { EmptyFinance } from "./empty-finance";
+export { EmptyEmployees } from "./empty-employees";
+export { EmptyActivity } from "./empty-activity";
+export { EmptyChart } from "./empty-chart";
+export { EmptyCommissions } from "./empty-commissions";
+export { EmptySearch } from "./empty-search";
+export { EmptyStock } from "./empty-stock";
+export { EmptyTransfers } from "./empty-transfers";
+export { EmptyDeliveries } from "./empty-deliveries";
+export { EmptyVehicles } from "./empty-vehicles";

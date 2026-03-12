@@ -4,7 +4,7 @@ services:
     container_name: nexora-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: nexora
       POSTGRES_PASSWORD: nexora

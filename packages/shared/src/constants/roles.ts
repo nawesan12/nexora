@@ -1,37 +1,36 @@
 export const Rol = {
   ADMIN: "ADMIN",
+  SUPERVISOR: "SUPERVISOR",
+  JEFE_VENTAS: "JEFE_VENTAS",
   VENDEDOR: "VENDEDOR",
-  ENCARGADO: "ENCARGADO",
-  ENCARGADO_DE_CALLE: "ENCARGADO_DE_CALLE",
-  ENCARGADO_DEPOSITO: "ENCARGADO_DEPOSITO",
-  FINANZAS: "FINANZAS",
-  LOGISTICA: "LOGISTICA",
-  REPARTIDOR: "REPARTIDOR",
   VENDEDOR_CALLE: "VENDEDOR_CALLE",
+  DEPOSITO: "DEPOSITO",
+  FINANZAS: "FINANZAS",
+  REPARTIDOR: "REPARTIDOR",
 } as const;
 
 export type Rol = (typeof Rol)[keyof typeof Rol];
 
+export const ROLES: Rol[] = Object.values(Rol);
+
 export const ROLE_LABELS: Record<Rol, string> = {
   ADMIN: "Administrador",
+  SUPERVISOR: "Supervisor",
+  JEFE_VENTAS: "Jefe de Ventas",
   VENDEDOR: "Vendedor",
-  ENCARGADO: "Encargado",
-  ENCARGADO_DE_CALLE: "Encargado de Calle",
-  ENCARGADO_DEPOSITO: "Encargado de Depósito",
-  FINANZAS: "Finanzas",
-  LOGISTICA: "Logística",
-  REPARTIDOR: "Repartidor",
   VENDEDOR_CALLE: "Vendedor de Calle",
+  DEPOSITO: "Depósito",
+  FINANZAS: "Finanzas",
+  REPARTIDOR: "Repartidor",
 };
 
 export const ROLE_DEFAULT_REDIRECT: Record<Rol, string> = {
   ADMIN: "/dashboard",
+  SUPERVISOR: "/dashboard",
+  JEFE_VENTAS: "/ventas/pedidos",
   VENDEDOR: "/ventas/pedidos",
-  ENCARGADO: "/dashboard",
-  ENCARGADO_DE_CALLE: "/ventas/pedidos",
-  ENCARGADO_DEPOSITO: "/inventario",
-  FINANZAS: "/finanzas",
-  LOGISTICA: "/logistica/repartos",
-  REPARTIDOR: "/logistica/repartos",
   VENDEDOR_CALLE: "/ventas/pedidos",
+  DEPOSITO: "/inventario",
+  FINANZAS: "/finanzas",
+  REPARTIDOR: "/logistica/repartos",
 };

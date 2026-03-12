@@ -57,3 +57,28 @@ func ValidationErrors(w http.ResponseWriter, errors []ValidationError) {
 		},
 	})
 }
+
+type APIResponseWithMeta struct {
+	Success bool   `json:"success"`
+	Data    any    `json:"data,omitempty"`
+	Meta    any    `json:"meta,omitempty"`
+	Error   *APIError `json:"error,omitempty"`
+}
+
+func JSONWithMeta(w http.ResponseWriter, status int, data any, meta any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(APIResponseWithMeta{
+		Success: true,
+		Data:    data,
+		Meta:    meta,
+	})
+}
+
+func Created(w http.ResponseWriter, data any) {
+	JSON(w, http.StatusCreated, data)
+}
+
+func NoContent(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
+}

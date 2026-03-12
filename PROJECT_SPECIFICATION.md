@@ -7,6 +7,7 @@
 ## TABLE OF CONTENTS
 
 1. [Project Overview](#1-project-overview)
+1a. [Business Context](#1a-business-context)
 2. [New Brand Identity](#2-new-brand-identity)
 3. [Recommended New Stack](#3-recommended-new-stack)
 4. [Complete Feature Map](#4-complete-feature-map)
@@ -23,6 +24,7 @@
 15. [Role-Based Access Control](#15-role-based-access-control)
 16. [File Structure Reference](#16-file-structure-reference)
 17. [Build & Deployment Notes](#17-build--deployment-notes)
+18. [Next Priority — Build Roadmap](#next-priority--build-roadmap)
 
 ---
 
@@ -69,6 +71,60 @@ A **full-stack Enterprise Resource Planning (ERP) system** for distribution comp
 - NextAuth 4.24 + custom JWT
 - Cloudinary for images
 - AFIP SDK for Argentine invoicing
+
+---
+
+## 1a. BUSINESS CONTEXT
+
+> This section captures the **why** behind the modules — the business model that drives every feature decision.
+
+### Invoice-Centric Operations
+
+The entire business revolves around **facturas (invoices)**. Invoicing isn't a nice-to-have — it's the backbone of every operation:
+
+- **Sales → Invoice**: Every completed sale generates an invoice for the client
+- **Purchases → Invoice**: Every purchase arrives with a supplier invoice that must be matched against purchase orders
+- **Delivery → Signature Invoice**: Delivery drivers (repartidores) carry invoices that clients must **sign electronically** to confirm receipt of goods
+
+### Electronic Delivery Signature Flow
+
+1. Warehouse staff (ENCARGADO_DEPOSITO) assembles orders (picking/packing)
+2. Delivery driver (REPARTIDOR) loads orders + their associated facturas
+3. Driver follows planned route, delivers to each client
+4. Client reviews the factura and **signs electronically** on the driver's device
+5. Signature confirms receipt — order transitions to ENTREGADO
+
+This flow is central to the logistics and sales modules and requires: invoice PDF generation, mobile/tablet signature capture, and delivery status tracking.
+
+### Warehouse Tablet App (App de Depósito)
+
+The ENCARGADO_DEPOSITO role uses **tablets** in the warehouse to:
+- View orders that need to be assembled (armar pedidos)
+- Manage picking/packing workflow
+- Mark orders as ready for dispatch
+- Track which orders are assigned to which delivery route
+
+This is a separate interface optimized for tablet use — not the full ERP dashboard.
+
+### Multi-Rubro (Multi-Industry)
+
+- **Primary client**: Distribución de alimentos balanceados (animal feed distribution)
+- **System must be generic** for ANY distribution business — including:
+  - Prendas (clothing) with sizes/colors
+  - Any product with variants (talles, colores, etc.)
+- The variant system already spec'd in the DB schema (colors with hex codes, sizes numeric/letter) supports this flexibility
+- Business rules, tax handling, and invoice formats must be configurable per tenant/industry
+
+### Team Structure
+
+The business has a well-organized team with clear role separation that maps directly to the 9 defined roles:
+- **ADMIN**: Full system access, configuration
+- **VENDEDOR / VENDEDOR_CALLE**: Sales team (office and field)
+- **ENCARGADO / ENCARGADO_DE_CALLE**: Supervisors (office and field)
+- **ENCARGADO_DEPOSITO**: Warehouse management (tablet app)
+- **FINANZAS**: Finance operations
+- **LOGISTICA**: Route planning and delivery coordination
+- **REPARTIDOR**: Delivery drivers (mobile app)
 
 ---
 
@@ -354,32 +410,32 @@ apps/api/
 ## 4. COMPLETE FEATURE MAP
 
 ### MODULE 1: Authentication & Onboarding
-- [ ] Email/password registration (multi-step: admin info → business info → first branch)
-- [ ] Email verification with token expiration
-- [ ] Login with email/password
-- [ ] Login with employee access code (numeric PIN)
-- [ ] Password reset flow (request → email link → reset form)
+- [x] Email/password registration (multi-step: admin info → business info → first branch)
+- [x] Email verification with token expiration
+- [x] Login with email/password
+- [x] Login with employee access code (numeric PIN)
+- [x] Password reset flow (request → email link → reset form)
 - [ ] Password strength indicator (length, uppercase, lowercase, numbers, special chars)
-- [ ] Role-based redirect after login (different roles see different dashboards)
-- [ ] Session management with JWT in HttpOnly cookies (24h expiration)
+- [x] Role-based redirect after login (different roles see different dashboards)
+- [x] Session management with JWT in HttpOnly cookies (15min access + httpOnly refresh)
 - [ ] Session timeout (30 min inactivity) with 5-minute warning modal
 - [ ] Multi-tab session synchronization
 - [ ] Demo account creation with pre-loaded sample data
 - [ ] Guided onboarding tour (step-by-step product walkthrough)
 - [ ] Onboarding checklist for new users
-- [ ] Terms & conditions page (14 sections)
-- [ ] Privacy policy page (12 sections, Argentine law 25.326 compliance)
+- [x] Terms & conditions page (14 sections)
+- [x] Privacy policy page (12 sections, Argentine law 25.326 compliance)
 - [ ] Google OAuth integration
 
 ### MODULE 2: Dashboard
 - [ ] Customizable widget grid (drag, drop, resize, add, remove)
 - [ ] Layout persistence per user
 - [ ] Role-based widget visibility
-- [ ] Time-based greeting (morning/afternoon/evening)
-- [ ] KPI cards: monthly sales, pending orders, active customers, stock alerts
-- [ ] 7-day sales trend area chart
-- [ ] Recent activity feed (sales, purchases, orders)
-- [ ] Quick action buttons (filtered by role)
+- [x] Time-based greeting (morning/afternoon/evening)
+- [x] KPI cards: monthly sales, pending orders, active customers, stock alerts *(mock data — needs real DB integration)*
+- [x] 7-day sales trend area chart *(mock data)*
+- [x] Recent activity feed (sales, purchases, orders) *(mock data)*
+- [x] Quick action buttons (filtered by role)
 - [ ] Weather widget (for logistics planning)
 - [ ] Command palette (Ctrl+K) for quick navigation
 - [ ] Keyboard shortcuts throughout the app
@@ -392,14 +448,14 @@ apps/api/
 - [ ] **Sales KPIs**: monthly total, pending balance, invoices generated, credit notes
 - [ ] **Invoice generation** (AFIP/tax authority integration)
 - [ ] **Credit note creation** from sales (select items to return, reason, calculate refund)
-- [ ] **Customer management**: CRUD, credit limits, reputation tracking, delivery addresses
+- [x] **Customer management**: CRUD, credit limits, reputation tracking, delivery addresses
 - [ ] **Customer categories/segmentation**
 - [ ] **Customer loyalty program**
 - [ ] **Promotions engine**: percentage discount, quantity-based, combo deals, date ranges
-- [ ] **Sales orders (Pedidos)**: full lifecycle with 14 status states
-- [ ] **Order approval workflow**: pending → evaluation → approved/rejected → preparation → shipped → delivered
-- [ ] **Order status stepper** (visual timeline)
-- [ ] **Order history audit trail** (every status change logged with user, timestamp, notes)
+- [x] **Sales orders (Pedidos)**: full lifecycle with 16 status states
+- [x] **Order approval workflow**: pending → evaluation → approved/rejected → preparation → shipped → delivered
+- [x] **Order status stepper** (visual timeline)
+- [x] **Order history audit trail** (every status change logged with user, timestamp, notes)
 - [ ] **Signature capture** on delivery
 - [ ] **Partial delivery** handling
 - [ ] **Sales approvals page** (for managers to approve/reject pending orders)
@@ -429,17 +485,17 @@ apps/api/
 - [ ] **Internal POS orders**
 
 ### MODULE 4: Inventory Management
-- [ ] **Product catalog** CRUD with full form:
+- [x] **Product catalog** CRUD with full form:
   - Name, description, SKU, barcode/PLU
   - Category & family assignment
   - Images (upload, validation)
   - Pricing (cost, margin, sale price, loose price, USD price)
-  - Variants (colors, sizes with barcodes per variant)
+  - [ ] Variants (colors, sizes with barcodes per variant)
   - Unit of measure (KG, UNIDAD, LITRO, METRO, etc.)
   - Weight, dimensions
   - Branch-specific catalog items with per-branch stock
-- [ ] **Product categories & families** (hierarchical)
-- [ ] **Stock management** per branch
+- [x] **Product categories & families** (hierarchical)
+- [x] **Stock management** per branch (catálogo por sucursal)
 - [ ] **Stock movement history** (audit trail: who, what, when, why)
 - [ ] **Price management** with multiple price lists per branch
 - [ ] **Price lists** (different prices for different customer categories)
@@ -448,33 +504,33 @@ apps/api/
 - [ ] **Bulk import** from Excel/CSV with progress tracking
 - [ ] **Product export** (CSV, Excel, JSON)
 - [ ] **Stock breakage/loss** tracking
-- [ ] **Low stock alerts** and notifications
+- [x] **Low stock alerts** and notifications
 - [ ] **Product variants** management (colors with hex codes, sizes numeric/letter)
 
 ### MODULE 5: Finance
-- [ ] **Financial summary dashboard**: gross revenue, costs, net profit, receivables, payables, profitability
+- [ ] **Financial summary dashboard**: gross revenue, costs, net profit, receivables, payables, profitability *(API endpoint exists, web needs real data wiring)*
 - [ ] **Cash flow chart** (inflows vs outflows, area chart)
 - [ ] **Expense composition** pie chart by category
 - [ ] **Date range picker** for all financial reports
 - [ ] **Export to Excel** (multi-sheet: summary, daily cash flow, expenses)
-- [ ] **Cash boxes (Cajas)** per branch — open, close, reconcile
-- [ ] **Cash movements** (INGRESO, EGRESO, AJUSTE types)
-- [ ] **Cash reconciliation (Arqueo)** with approval workflow
+- [x] **Cash boxes (Cajas)** per branch — open, close, reconcile
+- [x] **Cash movements** (INGRESO, EGRESO, AJUSTE types)
+- [x] **Cash reconciliation (Arqueo)** with approval workflow
 - [ ] **Bank accounts** management
 - [ ] **Bank reconciliation**
-- [ ] **Check management** (receive, endorse, deposit, bounce — full lifecycle)
+- [x] **Check management** (receive, endorse, deposit, bounce — full lifecycle)
 - [ ] **Customer credit accounts (Cuenta Corriente)** — track customer debt
 - [ ] **Supplier payment accounts** — track what you owe
-- [ ] **Expense tracking** with categories (operational, admin, logistics, etc.)
-- [ ] **Recurring expenses** (monthly/annual)
-- [ ] **Tax management** (IVA/VAT configuration per branch)
+- [x] **Expense tracking** with categories (operational, admin, logistics, etc.)
+- [x] **Recurring expenses** (monthly/annual)
+- [x] **Tax management** (IVA/VAT configuration per branch — configuracion_impuestos CRUD)
 - [ ] **Tax withholdings (Retenciones)** by province
-- [ ] **Commission calculation** per salesperson (configurable tiers)
-- [ ] **Commission configuration** (percentage, fixed, tiered by sales volume)
+- [x] **Commission calculation** per salesperson (configurable tiers)
+- [x] **Commission configuration** (percentage, fixed, tiered by sales volume)
 - [ ] **Financial vouchers/receipts (Comprobantes)**
-- [ ] **Payment methods** management (cash, card, transfer, check — each with commission %)
+- [x] **Payment methods** management (cash, card, transfer, check — each with commission %) *(API only)*
 - [ ] **Financial indices/ratios**
-- [ ] **Budgets** management
+- [x] **Budgets** management
 - [ ] **Cash withdrawals** tracking
 
 ### MODULE 6: Purchasing & Suppliers
@@ -503,7 +559,7 @@ apps/api/
 - [ ] **Real-time salesperson location** on map
 
 ### MODULE 8: HR & Administration
-- [ ] **Employee management** (personal info, role, branch assignments)
+- [x] **Employee management** (personal info, role, branch assignments — 13 HR fields, bulk ops, CSV export)
 - [ ] **Employee contracts** (salary, start/end dates, modality)
 - [ ] **HR dashboard** with team overview
 - [ ] **Task management** with priorities, assignees, comments
@@ -512,7 +568,7 @@ apps/api/
 - [ ] **Goal evaluation** tracking
 - [ ] **Supervision dashboard** (orders, inventory, logistics oversight)
 - [ ] **Branch management** (create, configure branches)
-- [ ] **System configuration** (account settings, billing, fiscal, notifications)
+- [x] **System configuration** — permissions matrix page (`/configuracion/permisos`)
 - [ ] **Integration management** (API keys, e-commerce clients, Google Calendar)
 - [ ] **Product variant configuration** (global colors, sizes, clothing types)
 - [ ] **Reports** page with multiple export formats
@@ -2125,59 +2181,59 @@ pnpm turbo test                    # Test all JS/TS apps
 
 ## REBUILD CHECKLIST
 
-### Phase 1: Monorepo & Infrastructure Setup
-- [ ] Initialize Turborepo monorepo with pnpm workspaces
-- [ ] Set up `apps/api` Go module (Chi/Echo, project structure, Makefile)
-- [ ] Set up `apps/web` Next.js 15+ with App Router
-- [ ] Set up `apps/mobile` Expo project with Expo Router
-- [ ] Set up `packages/shared` (types, schemas, constants)
-- [ ] Set up `packages/config` (ESLint, TS, Tailwind shared configs)
-- [ ] Docker Compose for local dev (Postgres + Redis)
+### Phase 1: Monorepo & Infrastructure Setup ✅
+- [x] Initialize Turborepo monorepo with pnpm workspaces
+- [x] Set up `apps/api` Go module (Chi v5, project structure, Makefile)
+- [x] Set up `apps/web` Next.js 16 with App Router
+- [ ] Set up `apps/mobile` Expo project with Expo Router *(deferred)*
+- [x] Set up `packages/shared` (types, schemas, constants)
+- [x] Set up `packages/config` (ESLint, TS, Tailwind shared configs)
+- [x] Docker Compose for local dev (Postgres 16 + Redis 7)
 - [ ] GitHub Actions CI pipeline (lint, test, build for all apps)
 
-### Phase 2: Backend API Foundation (Go)
-- [ ] Database schema via SQL migrations (golang-migrate)
-- [ ] sqlc setup and query generation
-- [ ] Auth system: JWT access/refresh, registration, login, password reset, email verification
-- [ ] RBAC middleware (role + permission checks)
-- [ ] WebSocket hub with rooms (per-branch, per-user)
-- [ ] Asynq background job processor setup
+### Phase 2: Backend API Foundation (Go) ✅
+- [x] Database schema via SQL migrations (Atlas)
+- [x] sqlc setup and query generation
+- [x] Auth system: JWT access/refresh, registration, login, password reset, email verification
+- [x] RBAC middleware (role + permission checks — hybrid system with 8 roles, 30 permissions)
+- [x] WebSocket hub with rooms *(skeleton — not wired to real events)*
+- [x] Asynq background job processor setup *(skeleton — not wired)*
 - [ ] Swagger/OpenAPI doc generation
-- [ ] API error handling & response standardization
-- [ ] Rate limiting & CORS middleware
+- [x] API error handling & response standardization
+- [x] Rate limiting & CORS middleware
 - [ ] Generate TypeScript types from OpenAPI → `packages/shared`
 
-### Phase 3: Web Frontend Foundation (Next.js)
-- [ ] Build base UI component library (shadcn/ui)
-- [ ] Create app shell (sidebar, header, command palette)
-- [ ] Typed API client (from OpenAPI-generated types)
-- [ ] WebSocket client & provider (socket connection, event handlers)
-- [ ] Auth flow (login, register, token storage, refresh, protected routes)
-- [ ] React Query hooks wired to Go API
-- [ ] RBAC on frontend (route guards, UI permission checks)
+### Phase 3: Web Frontend Foundation (Next.js) ✅
+- [x] Build base UI component library (30+ shadcn/ui components)
+- [x] Create app shell (sidebar, header — GSAP page animations)
+- [x] Typed API client (manual, not from OpenAPI)
+- [x] WebSocket client & provider *(skeleton — not fully wired)*
+- [x] Auth flow (login, register, token storage, refresh, protected routes)
+- [x] React Query hooks wired to Go API
+- [x] RBAC on frontend (route guards, UI permission checks — `hasPermission()`)
 
-### Phase 4: Core Modules (API + Web)
-- [ ] Dashboard with customizable widgets + real-time KPIs
-- [ ] Product & inventory management (+ stock alerts via WebSocket)
-- [ ] Customer management (CRUD, credit, loyalty)
-- [ ] Sales order lifecycle (+ live order board via WebSocket)
-- [ ] Supplier & purchase management
+### Phase 4: Core Modules (API + Web) — Partial
+- [x] Dashboard with KPI cards + charts *(mock data — needs real DB wiring)*
+- [x] Product & inventory management (families, categories, products, catalog per branch)
+- [x] Customer management (CRUD, addresses, reputation filters)
+- [x] Sales order lifecycle (16-state machine, tax system, order form, detail page)
+- [ ] Supplier & purchase management *(not started)*
 
-### Phase 5: Operations (API + Web)
+### Phase 5: Operations (API + Web) — Partial
 - [ ] POS system (+ cross-device sync via WebSocket)
 - [ ] Invoicing system (AFIP integration, background PDF generation)
-- [ ] Finance module (cash boxes, payments, expenses, checks)
-- [ ] Logistics (deliveries, routes, fleet, GPS tracking via WebSocket)
+- [x] Finance module (cash boxes, movements, reconciliation, checks, expenses, budgets, commissions)
+- [ ] Logistics (deliveries, routes, fleet, GPS tracking via WebSocket) *(nav exists, no pages)*
 
-### Phase 6: Advanced Features (API + Web)
-- [ ] Commission system
+### Phase 6: Advanced Features (API + Web) — Partial
+- [x] Commission system (log + configuration)
 - [ ] Promotion engine
-- [ ] Check management & bank reconciliation
+- [x] Check management *(done)* / [ ] Bank reconciliation *(not done)*
 - [ ] Reports & analytics (background generation via Asynq)
 - [ ] E-commerce webhook API
 - [ ] Email notifications (via Asynq + Resend)
 
-### Phase 7: Mobile App (React Native / Expo)
+### Phase 7: Mobile App (React Native / Expo) — Not Started
 - [ ] Auth flow (login, biometrics, secure token storage)
 - [ ] Delivery driver app (GPS tracking, route view, proof of delivery)
 - [ ] Field sales app (create orders, scan products, check credit)
@@ -2187,7 +2243,7 @@ pnpm turbo test                    # Test all JS/TS apps
 - [ ] Offline support for critical flows
 - [ ] Mobile POS mode (tablet)
 
-### Phase 8: Polish & Launch
+### Phase 8: Polish & Launch — Not Started
 - [ ] Onboarding tour (web + mobile)
 - [ ] Help documentation
 - [ ] Dark mode (web + mobile)
@@ -2195,6 +2251,57 @@ pnpm turbo test                    # Test all JS/TS apps
 - [ ] Testing: Go unit/integration tests, Vitest (web), Playwright E2E, Maestro (mobile)
 - [ ] Security audit (OWASP top 10, JWT hardening, input sanitization)
 - [ ] Production deployment pipeline (Vercel + Railway/Fly.io + EAS)
+
+---
+
+## NEXT PRIORITY — BUILD ROADMAP
+
+The following sequence reflects dependencies and business value. Each step builds on the previous.
+
+### Step 1: Facturación (Invoicing System)
+**Why first:** Every other module depends on invoices — drivers carry facturas, purchases arrive with facturas, finance tracks facturas. This is the backbone.
+
+- Invoice model: types A/B/N/X, linked to pedidos/ventas
+- Invoice generation from completed orders (automatic or manual trigger)
+- PDF generation (for delivery drivers to carry, for clients to receive)
+- AFIP integration (CAE electronic authorization) — pluggable architecture for other tax authorities
+- Credit notes from invoices (partial/full returns)
+- Invoice listing with filters (date, type, status, client)
+- Invoice detail view with associated order and payment info
+
+### Step 2: Dashboard con Datos Reales
+**Why second:** Quick win that makes the app feel "alive" while invoicing settles.
+
+- Wire KPI cards to real DB aggregations (revenue, pending orders, active clients, stock alerts)
+- Charts with real data (revenue vs expenses area chart, order status pie, weekly bar chart)
+- Recent activity feed from real events (orders, movements, expenses)
+- Replace all mock/hardcoded values in dashboard components
+
+### Step 3: Compras y Proveedores
+**Why third:** Completes the buy-sell cycle — can't track costs or margins without purchase data.
+
+- Proveedor CRUD (nombre, CUIT, contacto, banco, condición IVA)
+- Purchase orders (create, approve, receive, close — lifecycle similar to pedidos)
+- Supplier invoice processing (match against PO, variance detection)
+- Convenios de precio (pricing agreements with quantity tiers per supplier)
+- Supplier returns & credit notes
+
+### Step 4: Logística y Delivery
+**Why fourth:** Enables the electronic signature flow — the core business differentiator.
+
+- Repartos CRUD (planificar, despachar, trackear, completar)
+- Delivery flow: driver loads orders + facturas → delivers → client signs electronically → confirmed
+- Warehouse tablet view: ENCARGADO_DEPOSITO sees orders to assemble (picking/packing workflow)
+- Route planning and assignment (driver + vehicle + zone + orders)
+- Fleet/vehicle management (placa, capacidad, dimensiones)
+- Zone management (territory assignment per branch)
+
+### Step 5: Remaining Modules
+- Sales list & POS (point of sale with barcode scanning, multi-payment)
+- Reports & Analytics (financial reports, sales reports, inventory reports — PDF/Excel export)
+- Inventory movements (transfers between branches, stock adjustments, movement history)
+- E-Commerce API (product listing, order creation for external clients)
+- Advanced features (promotions engine, loyalty program, sales objectives)
 
 ---
 

@@ -1,22 +1,58 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
+	"strings"
 
+	"github.com/jackc/pgx/v5/pgtype"
+	jwtpkg "github.com/nexora-erp/nexora/internal/pkg/jwt"
 	"github.com/nexora-erp/nexora/internal/pkg/response"
 )
 
-// Auth is a placeholder JWT authentication middleware.
-// It will be implemented when the auth module is built.
-func Auth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get("Authorization")
-		if token == "" {
-			response.Error(w, http.StatusUnauthorized, "UNAUTHORIZED", "missing authorization header")
-			return
-		}
+type contextKey string
 
-		// TODO: Validate JWT token, extract claims, set user in context
-		next.ServeHTTP(w, r)
-	})
+const claimsKey contextKey = "claims"
+
+func Auth(jwtManager *jwtpkg.Manager) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			tokenString := extractToken(r)
+			if tokenString == "" {
+				response.Error(w, http.StatusUnauthorized, "UNAUTHORIZED", "no autenticado")
+				return
+			}
+
+			claims, err := jwtManager.ValidateAccessToken(tokenString)
+			if err != nil {
+				response.Error(w, http.StatusUnauthorized, "TOKEN_INVALID", "token inválido o expirado")
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), claimsKey, claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func extractToken(r *http.Request) string {
+	if cookie, err := r.Cookie("access_token"); err == nil {
+		return cookie.Value
+	}
+
+	auth := r.Header.Get("Authorization")
+	if strings.HasPrefix(auth, "Bearer ") {
+		return strings.TrimPrefix(auth, "Bearer ")
+	}
+
+	return ""
+}
+
+func ClaimsFromContext(ctx context.Context) *jwtpkg.Claims {
+	claims, _ := ctx.Value(claimsKey).(*jwtpkg.Claims)
+	return claims
+}
+
+func PgUserID(claims *jwtpkg.Claims) pgtype.UUID {
+	return pgtype.UUID{Bytes: claims.UserID, Valid: true}
 }
