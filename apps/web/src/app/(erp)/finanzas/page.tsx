@@ -96,7 +96,7 @@ export default function FinanzasResumenPage() {
 
   const kpis: KpiDef[] = data
     ? [
-        { title: "Saldo Total Cajas", value: formatCurrency(data.saldo_cajas), icon: DollarSign, color: "#7C3AED" },
+        { title: "Saldo Total Cajas", value: formatCurrency(data.saldo_cajas), icon: DollarSign, color: "#D97706" },
         { title: "Ingresos del Mes", value: formatCurrency(data.total_ingresos), icon: TrendingUp, color: "#10B981" },
         { title: "Egresos del Mes", value: formatCurrency(data.total_egresos), icon: TrendingDown, color: "#EF4444" },
         { title: "Cheques Pendientes", value: String(data.total_cheques_pendientes), icon: CreditCard, color: "#3B82F6" },

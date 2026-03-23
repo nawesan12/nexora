@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/user-store";
-import { ROLE_DEFAULT_REDIRECT } from "@nexora/shared/constants";
+import { ROLE_DEFAULT_REDIRECT } from "@pronto/shared/constants";
 
 export default function Home() {
   const router = useRouter();

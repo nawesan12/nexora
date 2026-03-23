@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { usePedidos, useDeletePedido } from "@/hooks/queries/use-orders";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import { ORDER_STATUS_LABELS } from "@nexora/shared/constants";
-import type { PedidoList } from "@nexora/shared/types";
+import { ORDER_STATUS_LABELS } from "@pronto/shared/constants";
+import type { PedidoList } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,
@@ -51,7 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
   PREPARADO:
     "bg-cyan-100 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-400",
   EN_REPARTO:
-    "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400",
+    "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-teal-400",
   ENTREGADO:
     "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400",
   CANCELADO:
@@ -321,7 +321,7 @@ export default function PedidosPage() {
 
       {/* Summary bar */}
       <Card className="pedidos-summary-bar border-0 shadow-sm overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-primary to-violet-500" />
+        <div className="h-1 bg-gradient-to-r from-primary to-amber-500" />
         <CardContent className="py-4">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">

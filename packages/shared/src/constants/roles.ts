@@ -30,7 +30,7 @@ export const ROLE_DEFAULT_REDIRECT: Record<Rol, string> = {
   JEFE_VENTAS: "/ventas/pedidos",
   VENDEDOR: "/ventas/pedidos",
   VENDEDOR_CALLE: "/ventas/pedidos",
-  DEPOSITO: "/inventario",
+  DEPOSITO: "/logistica/deposito",
   FINANZAS: "/finanzas",
   REPARTIDOR: "/logistica/repartos",
 };

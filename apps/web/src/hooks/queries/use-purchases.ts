@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { comprasApi } from "@/lib/purchases";
-import type { OrdenCompraInput, ReceiveInput } from "@nexora/shared/schemas";
+import type { OrdenCompraInput, ReceiveInput } from "@pronto/shared/schemas";
 
 export function useOrdenesCompra({ page, pageSize, search, estado }: { page?: number; pageSize?: number; search?: string; estado?: string } = {}) {
   return useQuery({

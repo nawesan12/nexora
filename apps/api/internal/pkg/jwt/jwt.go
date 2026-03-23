@@ -43,7 +43,7 @@ func (m *Manager) GenerateAccessToken(claims Claims) (string, error) {
 		ExpiresAt: jwt.NewNumericDate(now.Add(m.accessExpiry)),
 		IssuedAt:  jwt.NewNumericDate(now),
 		NotBefore: jwt.NewNumericDate(now),
-		Issuer:    "nexora",
+		Issuer:    "pronto",
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

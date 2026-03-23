@@ -31,9 +31,9 @@ export default function Loading() {
       <div className="flex items-center gap-4 py-2">
         <div
           ref={logoRef}
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400 to-indigo-600 text-base font-bold text-white shadow-lg shadow-violet-500/20"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-700 text-base font-bold text-white shadow-lg shadow-teal-500/20"
         >
-          N
+          P
         </div>
         <div className="space-y-1.5">
           <div className="h-7 w-44 animate-pulse rounded-lg bg-muted" />

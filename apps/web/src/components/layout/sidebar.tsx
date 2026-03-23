@@ -6,7 +6,7 @@ import { ChevronDown, LogOut, Settings, User, Search, Command } from "lucide-rea
 import { useUserStore } from "@/store/user-store";
 import { filterNavByPermissions } from "@/config/navigation";
 import { authApi } from "@/lib/auth";
-import { ROLE_LABELS } from "@nexora/shared/constants";
+import { ROLE_LABELS } from "@pronto/shared/constants";
 import {
   Sidebar,
   SidebarContent,
@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Rol } from "@nexora/shared/constants";
+import type { Rol } from "@pronto/shared/constants";
 import { cn } from "@/lib/utils";
 
 export function AppSidebar() {
@@ -54,12 +54,12 @@ export function AppSidebar() {
           href="/dashboard"
           className="flex items-center gap-3 transition-opacity hover:opacity-80"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400 to-indigo-600 text-base font-bold text-white shadow-lg shadow-violet-500/25">
-            N
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-700 text-base font-bold text-white shadow-lg shadow-teal-500/25">
+            P
           </div>
           <div className="flex flex-col">
             <span className="text-lg font-bold leading-tight tracking-tight text-sidebar-foreground">
-              Nexora
+              Pronto
             </span>
             <span className="text-[11px] font-medium uppercase tracking-widest text-sidebar-foreground/40">
               ERP System
@@ -107,13 +107,13 @@ export function AppSidebar() {
                           className={cn(
                             "h-[18px] w-[18px] shrink-0 transition-colors",
                             isActive
-                              ? "text-violet-400"
+                              ? "text-teal-400"
                               : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60",
                           )}
                         />
                         <span>{item.title}</span>
                         {item.badge && (
-                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-500/20 px-1.5 text-[11px] font-semibold text-violet-300">
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500/20 px-1.5 text-[11px] font-semibold text-amber-300">
                             {item.badge}
                           </span>
                         )}
@@ -132,7 +132,7 @@ export function AppSidebar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-sidebar-accent/40">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400/20 to-indigo-500/20 text-sm font-semibold text-violet-300 ring-1 ring-violet-400/20">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400/20 to-teal-500/20 text-sm font-semibold text-teal-300 ring-1 ring-teal-400/20">
                 {initials}
               </div>
               <div className="min-w-0 flex-1">

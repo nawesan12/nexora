@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,7 +11,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nexora-erp/nexora/internal/repository"
+	invoicepdf "github.com/pronto-erp/pronto/internal/pdf"
+	"github.com/pronto-erp/pronto/internal/repository"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -21,14 +24,16 @@ var (
 )
 
 type InvoiceService struct {
-	db      *pgxpool.Pool
-	queries *repository.Queries
+	db              *pgxpool.Pool
+	queries         *repository.Queries
+	notificationSvc *NotificationService
 }
 
-func NewInvoiceService(db *pgxpool.Pool) *InvoiceService {
+func NewInvoiceService(db *pgxpool.Pool, notificationSvc *NotificationService) *InvoiceService {
 	return &InvoiceService{
-		db:      db,
-		queries: repository.New(db),
+		db:              db,
+		queries:         repository.New(db),
+		notificationSvc: notificationSvc,
 	}
 }
 
@@ -89,13 +94,13 @@ type DetalleComprobanteResponse struct {
 
 type CreateFromPedidoInput struct {
 	PedidoID      string `json:"pedido_id" validate:"required,uuid"`
-	Letra         string `json:"letra" validate:"omitempty,oneof=A B N X"`
+	Letra         string `json:"letra" validate:"omitempty,oneof=A B C N X"`
 	Observaciones string `json:"observaciones"`
 }
 
 type CreateManualInput struct {
 	Tipo          string                    `json:"tipo" validate:"required,oneof=FACTURA NOTA_CREDITO NOTA_DEBITO"`
-	Letra         string                    `json:"letra" validate:"required,oneof=A B N X"`
+	Letra         string                    `json:"letra" validate:"omitempty,oneof=A B C N X"`
 	ClienteID     string                    `json:"cliente_id" validate:"required,uuid"`
 	SucursalID    string                    `json:"sucursal_id" validate:"required,uuid"`
 	CondicionPago string                    `json:"condicion_pago" validate:"required,oneof=CONTADO CUENTA_CORRIENTE CHEQUE TRANSFERENCIA OTRO"`
@@ -149,7 +154,7 @@ func (s *InvoiceService) CreateFromPedido(ctx context.Context, userID pgtype.UUI
 		return nil, fmt.Errorf("check existing comprobante: %w", err)
 	}
 
-	// Determine letra from client's condicion_iva
+	// Determine letra from emisor + receptor condicion_iva
 	letra := input.Letra
 	if letra == "" {
 		clienteRow, err := s.queries.GetClienteByID(ctx, repository.GetClienteByIDParams{
@@ -158,7 +163,9 @@ func (s *InvoiceService) CreateFromPedido(ctx context.Context, userID pgtype.UUI
 		if err != nil {
 			return nil, fmt.Errorf("get cliente: %w", err)
 		}
-		letra = determinaLetra(string(clienteRow.CondicionIva.CondicionIva))
+		emisorCondicion := s.getEmisorCondicion(ctx, userID)
+		receptorCondicion := string(clienteRow.CondicionIva.CondicionIva)
+		letra = determinaLetra(emisorCondicion, receptorCondicion)
 	}
 
 	// Get order items
@@ -241,6 +248,22 @@ func (s *InvoiceService) CreateFromPedido(ctx context.Context, userID pgtype.UUI
 		return nil, fmt.Errorf("commit tx: %w", err)
 	}
 
+	// In-app notification for invoice creation
+	if s.notificationSvc != nil {
+		go func() {
+			_, err := s.notificationSvc.Create(context.Background(), CreateNotificacionInput{
+				DestinatarioID: userID,
+				Tipo:           repository.TipoNotificacionINFO,
+				Titulo:         "Factura " + numero + " creada",
+				Mensaje:        "Se generó la factura para el pedido " + pedido.Numero,
+				Enlace:         "/ventas/facturas/" + uuidStrFromPg(comprobante.ID),
+			})
+			if err != nil {
+				log.Error().Err(err).Str("comprobante", uuidStrFromPg(comprobante.ID)).Msg("failed to create invoice notification")
+			}
+		}()
+	}
+
 	return s.Get(ctx, userID, uuidStrFromPg(comprobante.ID))
 }
 
@@ -254,6 +277,20 @@ func (s *InvoiceService) CreateManual(ctx context.Context, userID pgtype.UUID, i
 	sucursalID, err := pgUUID(input.SucursalID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid sucursal_id")
+	}
+
+	// Validate letra against emisor condicion if not explicitly overridden
+	letra := input.Letra
+	if letra == "" {
+		clienteRow, err := s.queries.GetClienteByID(ctx, repository.GetClienteByIDParams{
+			ID: clienteID, UsuarioID: userID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("get cliente: %w", err)
+		}
+		emisorCondicion := s.getEmisorCondicion(ctx, userID)
+		receptorCondicion := string(clienteRow.CondicionIva.CondicionIva)
+		letra = determinaLetra(emisorCondicion, receptorCondicion)
 	}
 
 	// Calculate totals
@@ -280,7 +317,7 @@ func (s *InvoiceService) CreateManual(ctx context.Context, userID pgtype.UUID, i
 
 	comprobante, err := qtx.CreateComprobante(ctx, repository.CreateComprobanteParams{
 		Tipo:           repository.TipoComprobante(input.Tipo),
-		Letra:          repository.LetraComprobante(input.Letra),
+		Letra:          repository.LetraComprobante(letra),
 		Numero:         numero,
 		Estado:         repository.EstadoComprobanteBORRADOR,
 		ClienteID:      clienteID,
@@ -548,17 +585,31 @@ func (s *InvoiceService) Delete(ctx context.Context, userID pgtype.UUID, id stri
 
 // --- Helpers ---
 
-func determinaLetra(condicionIVA string) string {
-	switch condicionIVA {
+var ErrLetraInvalida = errors.New("combinacion de condicion IVA emisor/receptor no permite determinar una letra valida")
+
+func determinaLetra(emisorCondicion, receptorCondicion string) string {
+	switch emisorCondicion {
 	case "RESPONSABLE_INSCRIPTO":
-		return "A"
-	case "MONOTRIBUTO", "CONSUMIDOR_FINAL":
+		if receptorCondicion == "RESPONSABLE_INSCRIPTO" {
+			return "A"
+		}
 		return "B"
-	case "EXENTO":
-		return "N"
+	case "MONOTRIBUTO", "EXENTO":
+		return "C"
 	default:
 		return "B"
 	}
+}
+
+func (s *InvoiceService) getEmisorCondicion(ctx context.Context, userID pgtype.UUID) string {
+	empresa, err := s.queries.GetConfiguracionEmpresaByUsuario(ctx, userID)
+	if err != nil {
+		return "RESPONSABLE_INSCRIPTO" // default
+	}
+	if empresa.CondicionIva.Valid {
+		return empresa.CondicionIva.String
+	}
+	return "RESPONSABLE_INSCRIPTO"
 }
 
 type taxJSONItem struct {
@@ -651,4 +702,325 @@ func comprobanteListFromCliente(c repository.ListComprobantesByClienteRow) Compr
 
 func comprobanteListFromSearch(c repository.SearchComprobantesRow) ComprobanteListResponse {
 	return comprobanteListBase(c.ID, c.Tipo, c.Letra, c.Numero, c.Estado, c.ClienteNombre, c.ClienteApellido, c.Total, c.FechaEmision)
+}
+
+// --- PDF Generation ---
+
+type pdfCompanyInfo struct {
+	RazonSocial  string
+	CUIT         string
+	CondicionIVA string
+	Direccion    string
+	Telefono     string
+	Email        string
+	PieFactura   string
+}
+
+func (s *InvoiceService) GeneratePDF(ctx context.Context, userID pgtype.UUID, id string, formato string) (*bytes.Buffer, string, error) {
+	pgID, err := pgUUID(id)
+	if err != nil {
+		return nil, "", ErrComprobanteNotFound
+	}
+
+	// Get comprobante with client details
+	c, err := s.queries.GetComprobanteByID(ctx, repository.GetComprobanteByIDParams{
+		ID: pgID, UsuarioID: userID,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, "", ErrComprobanteNotFound
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("get comprobante: %w", err)
+	}
+
+	// Get line items
+	detalles, err := s.queries.ListDetallesByComprobante(ctx, pgID)
+	if err != nil {
+		return nil, "", fmt.Errorf("list detalles: %w", err)
+	}
+
+	// Get client extra info (CUIT, condicion_iva, address) via raw query
+	var clienteCUIT, clienteIVA, clienteAddress string
+	row := s.db.QueryRow(ctx, `
+		SELECT COALESCE(cl.cuit, ''), COALESCE(cl.condicion_iva::text, ''),
+		       COALESCE(d.calle || ' ' || COALESCE(d.numero, '') || ', ' || COALESCE(d.ciudad, '') || ', ' || COALESCE(d.provincia, ''), '')
+		FROM clientes cl
+		LEFT JOIN direcciones d ON d.cliente_id = cl.id AND d.principal = TRUE
+		WHERE cl.id = $1`, c.ClienteID)
+	_ = row.Scan(&clienteCUIT, &clienteIVA, &clienteAddress)
+
+	// Get company settings
+	company := pdfCompanyInfo{}
+	row = s.db.QueryRow(ctx, `
+		SELECT COALESCE(razon_social, ''), COALESCE(cuit, ''), COALESCE(condicion_iva, ''),
+		       COALESCE(direccion, ''), COALESCE(telefono, ''), COALESCE(email, ''),
+		       COALESCE(pie_factura, '')
+		FROM configuracion_empresa WHERE usuario_id = $1`, userID)
+	_ = row.Scan(&company.RazonSocial, &company.CUIT, &company.CondicionIVA,
+		&company.Direccion, &company.Telefono, &company.Email, &company.PieFactura)
+	if company.RazonSocial == "" {
+		company.RazonSocial = "Pronto ERP"
+	}
+
+	// Build client name
+	clienteNombre := c.ClienteNombre
+	if c.ClienteApellido.Valid && c.ClienteApellido.String != "" {
+		clienteNombre = c.ClienteApellido.String + ", " + c.ClienteNombre
+	}
+
+	// Parse taxes
+	var taxes []invoicepdf.InvoiceTax
+	if len(c.Impuestos) > 0 {
+		var taxItems []taxJSONItem
+		if err := json.Unmarshal(c.Impuestos, &taxItems); err == nil {
+			for _, t := range taxItems {
+				taxes = append(taxes, invoicepdf.InvoiceTax{
+					Nombre:        t.Nombre,
+					Porcentaje:    t.Porcentaje,
+					BaseImponible: t.BaseImponible,
+					Monto:         t.Monto,
+				})
+			}
+		}
+	}
+
+	// Build items
+	items := make([]invoicepdf.InvoiceItem, 0, len(detalles))
+	for _, d := range detalles {
+		items = append(items, invoicepdf.InvoiceItem{
+			Codigo:              textFromPg(d.ProductoCodigo),
+			Nombre:              d.ProductoNombre,
+			Unidad:              d.ProductoUnidad,
+			Cantidad:            floatFromNumeric(d.Cantidad),
+			PrecioUnitario:      floatFromNumeric(d.PrecioUnitario),
+			DescuentoPorcentaje: floatFromNumeric(d.DescuentoPorcentaje),
+			Subtotal:            floatFromNumeric(d.Subtotal),
+		})
+	}
+
+	data := invoicepdf.InvoiceData{
+		CompanyName:    company.RazonSocial,
+		CompanyCUIT:    company.CUIT,
+		CompanyIVA:     company.CondicionIVA,
+		CompanyAddress: company.Direccion,
+		CompanyPhone:   company.Telefono,
+		CompanyEmail:   company.Email,
+		FooterText:     company.PieFactura,
+
+		Tipo:          string(c.Tipo),
+		Letra:         string(c.Letra),
+		Numero:        c.Numero,
+		Estado:        string(c.Estado),
+		FechaEmision:  c.FechaEmision.Time.Format("2006-01-02"),
+		CondicionPago: string(c.CondicionPago),
+
+		ClienteNombre:  clienteNombre,
+		ClienteCUIT:    clienteCUIT,
+		ClienteIVA:     clienteIVA,
+		ClienteAddress: clienteAddress,
+
+		Items:          items,
+		Subtotal:       floatFromNumeric(c.Subtotal),
+		DescuentoMonto: floatFromNumeric(c.DescuentoMonto),
+		BaseImponible:  floatFromNumeric(c.BaseImponible),
+		Impuestos:      taxes,
+		TotalImpuestos: floatFromNumeric(c.TotalImpuestos),
+		Total:          floatFromNumeric(c.Total),
+		Observaciones:  textFromPg(c.Observaciones),
+	}
+
+	if c.Cae.Valid {
+		data.CAE = c.Cae.String
+	}
+	if c.FechaVencimientoCae.Valid {
+		data.FechaVtoCae = c.FechaVencimientoCae.Time.Format("2006-01-02")
+	}
+
+	filename := fmt.Sprintf("%s-%s-%s.pdf", c.Tipo, c.Letra, c.Numero)
+
+	var buf *bytes.Buffer
+	if formato == "ticket" {
+		buf, err = invoicepdf.GenerateTicketPDF(data)
+	} else {
+		buf, err = invoicepdf.GenerateInvoicePDF(data)
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("generate pdf: %w", err)
+	}
+
+	return buf, filename, nil
+}
+
+// GenerateBatchPDF generates a single PDF containing all EMITIDO invoices for a given date.
+// Each invoice is rendered on its own page(s).
+func (s *InvoiceService) GenerateBatchPDF(ctx context.Context, userID pgtype.UUID, fecha string) (*bytes.Buffer, string, error) {
+	// Parse and validate date
+	fechaTime, err := time.Parse("2006-01-02", fecha)
+	if err != nil {
+		return nil, "", fmt.Errorf("invalid fecha: %w", err)
+	}
+
+	// Fetch all EMITIDO comprobantes for this date via raw query
+	rows, err := s.db.Query(ctx, `
+		SELECT id FROM comprobantes
+		WHERE usuario_id = $1 AND estado = 'EMITIDO' AND fecha_emision = $2 AND active = TRUE
+		ORDER BY numero ASC
+	`, userID, pgtype.Date{Time: fechaTime, Valid: true})
+	if err != nil {
+		return nil, "", fmt.Errorf("query comprobantes: %w", err)
+	}
+	defer rows.Close()
+
+	var ids []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, "", fmt.Errorf("scan id: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, "", fmt.Errorf("rows err: %w", err)
+	}
+
+	if len(ids) == 0 {
+		return nil, "", fmt.Errorf("no invoices found for date %s", fecha)
+	}
+
+	// Generate individual PDFs and collect their data
+	var allData []invoicepdf.InvoiceData
+	for _, id := range ids {
+		idStr := uuidStrFromPg(id)
+		data, err := s.buildInvoiceData(ctx, userID, idStr)
+		if err != nil {
+			return nil, "", fmt.Errorf("build invoice data for %s: %w", idStr, err)
+		}
+		allData = append(allData, *data)
+	}
+
+	buf, err := invoicepdf.GenerateBatchPDF(allData)
+	if err != nil {
+		return nil, "", fmt.Errorf("generate batch pdf: %w", err)
+	}
+
+	filename := fmt.Sprintf("facturas-batch-%s.pdf", fecha)
+	return buf, filename, nil
+}
+
+// buildInvoiceData extracts all data needed to render a single invoice PDF.
+// This is the shared logic extracted from GeneratePDF.
+func (s *InvoiceService) buildInvoiceData(ctx context.Context, userID pgtype.UUID, id string) (*invoicepdf.InvoiceData, error) {
+	pgID, err := pgUUID(id)
+	if err != nil {
+		return nil, ErrComprobanteNotFound
+	}
+
+	c, err := s.queries.GetComprobanteByID(ctx, repository.GetComprobanteByIDParams{
+		ID: pgID, UsuarioID: userID,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrComprobanteNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get comprobante: %w", err)
+	}
+
+	detalles, err := s.queries.ListDetallesByComprobante(ctx, pgID)
+	if err != nil {
+		return nil, fmt.Errorf("list detalles: %w", err)
+	}
+
+	var clienteCUIT, clienteIVA, clienteAddress string
+	row := s.db.QueryRow(ctx, `
+		SELECT COALESCE(cl.cuit, ''), COALESCE(cl.condicion_iva::text, ''),
+		       COALESCE(d.calle || ' ' || COALESCE(d.numero, '') || ', ' || COALESCE(d.ciudad, '') || ', ' || COALESCE(d.provincia, ''), '')
+		FROM clientes cl
+		LEFT JOIN direcciones d ON d.cliente_id = cl.id AND d.principal = TRUE
+		WHERE cl.id = $1`, c.ClienteID)
+	_ = row.Scan(&clienteCUIT, &clienteIVA, &clienteAddress)
+
+	company := pdfCompanyInfo{}
+	row = s.db.QueryRow(ctx, `
+		SELECT COALESCE(razon_social, ''), COALESCE(cuit, ''), COALESCE(condicion_iva, ''),
+		       COALESCE(direccion, ''), COALESCE(telefono, ''), COALESCE(email, ''),
+		       COALESCE(pie_factura, '')
+		FROM configuracion_empresa WHERE usuario_id = $1`, userID)
+	_ = row.Scan(&company.RazonSocial, &company.CUIT, &company.CondicionIVA,
+		&company.Direccion, &company.Telefono, &company.Email, &company.PieFactura)
+	if company.RazonSocial == "" {
+		company.RazonSocial = "Pronto ERP"
+	}
+
+	clienteNombre := c.ClienteNombre
+	if c.ClienteApellido.Valid && c.ClienteApellido.String != "" {
+		clienteNombre = c.ClienteApellido.String + ", " + c.ClienteNombre
+	}
+
+	var taxes []invoicepdf.InvoiceTax
+	if len(c.Impuestos) > 0 {
+		var taxItems []taxJSONItem
+		if err := json.Unmarshal(c.Impuestos, &taxItems); err == nil {
+			for _, t := range taxItems {
+				taxes = append(taxes, invoicepdf.InvoiceTax{
+					Nombre:        t.Nombre,
+					Porcentaje:    t.Porcentaje,
+					BaseImponible: t.BaseImponible,
+					Monto:         t.Monto,
+				})
+			}
+		}
+	}
+
+	items := make([]invoicepdf.InvoiceItem, 0, len(detalles))
+	for _, d := range detalles {
+		items = append(items, invoicepdf.InvoiceItem{
+			Codigo:              textFromPg(d.ProductoCodigo),
+			Nombre:              d.ProductoNombre,
+			Unidad:              d.ProductoUnidad,
+			Cantidad:            floatFromNumeric(d.Cantidad),
+			PrecioUnitario:      floatFromNumeric(d.PrecioUnitario),
+			DescuentoPorcentaje: floatFromNumeric(d.DescuentoPorcentaje),
+			Subtotal:            floatFromNumeric(d.Subtotal),
+		})
+	}
+
+	data := &invoicepdf.InvoiceData{
+		CompanyName:    company.RazonSocial,
+		CompanyCUIT:    company.CUIT,
+		CompanyIVA:     company.CondicionIVA,
+		CompanyAddress: company.Direccion,
+		CompanyPhone:   company.Telefono,
+		CompanyEmail:   company.Email,
+		FooterText:     company.PieFactura,
+
+		Tipo:          string(c.Tipo),
+		Letra:         string(c.Letra),
+		Numero:        c.Numero,
+		Estado:        string(c.Estado),
+		FechaEmision:  c.FechaEmision.Time.Format("2006-01-02"),
+		CondicionPago: string(c.CondicionPago),
+
+		ClienteNombre:  clienteNombre,
+		ClienteCUIT:    clienteCUIT,
+		ClienteIVA:     clienteIVA,
+		ClienteAddress: clienteAddress,
+
+		Items:          items,
+		Subtotal:       floatFromNumeric(c.Subtotal),
+		DescuentoMonto: floatFromNumeric(c.DescuentoMonto),
+		BaseImponible:  floatFromNumeric(c.BaseImponible),
+		Impuestos:      taxes,
+		TotalImpuestos: floatFromNumeric(c.TotalImpuestos),
+		Total:          floatFromNumeric(c.Total),
+		Observaciones:  textFromPg(c.Observaciones),
+	}
+
+	if c.Cae.Valid {
+		data.CAE = c.Cae.String
+	}
+	if c.FechaVencimientoCae.Valid {
+		data.FechaVtoCae = c.FechaVencimientoCae.Time.Format("2006-01-02")
+	}
+
+	return data, nil
 }

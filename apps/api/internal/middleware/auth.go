@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	jwtpkg "github.com/nexora-erp/nexora/internal/pkg/jwt"
-	"github.com/nexora-erp/nexora/internal/pkg/response"
+	jwtpkg "github.com/pronto-erp/pronto/internal/pkg/jwt"
+	"github.com/pronto-erp/pronto/internal/pkg/response"
 )
 
 type contextKey string

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { transferenciaSchema, type TransferenciaInput } from "@nexora/shared/schemas";
+import { transferenciaSchema, type TransferenciaInput } from "@pronto/shared/schemas";
 import { useCreateTransferencia } from "@/hooks/queries/use-transfers";
 import { useProductos } from "@/hooks/queries/use-products";
 import { useUserStore } from "@/store/user-store";

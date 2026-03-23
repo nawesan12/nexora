@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { empleadosApi } from "@/lib/employees";
-import type { EmpleadoInput } from "@nexora/shared/schemas";
+import type { EmpleadoInput } from "@pronto/shared/schemas";
 
 export function useEmpleados({
   page = 1,

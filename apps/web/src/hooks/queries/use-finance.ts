@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   cajasApi,
   movimientosApi,
+  allMovimientosApi,
   arqueosApi,
   chequesApi,
   gastosApi,
@@ -20,7 +21,7 @@ import type {
   TransicionChequeInput, GastoInput, GastoRecurrenteInput,
   MetodoPagoInput, PresupuestoInput, ConfiguracionComisionInput,
   EntidadBancariaInput,
-} from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
 
 // --- Cajas ---
 
@@ -584,6 +585,28 @@ export function useDeleteEntidadBancaria() {
       toast.success("Entidad bancaria eliminada");
     },
     onError: () => toast.error("Error al eliminar entidad bancaria"),
+  });
+}
+
+// --- All Movimientos (cross-caja) ---
+
+export function useAllMovimientosCaja({ page = 1, pageSize = 20, tipo }: { page?: number; pageSize?: number; tipo?: string } = {}) {
+  return useQuery({
+    queryKey: ["movimientos-caja-all", page, pageSize, tipo],
+    queryFn: () => allMovimientosApi.listAll({ page, pageSize, tipo }),
+  });
+}
+
+export function useCreateMovimientoGeneral() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => allMovimientosApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["movimientos-caja-all"] });
+      queryClient.invalidateQueries({ queryKey: ["cajas"] });
+      toast.success("Movimiento registrado");
+    },
+    onError: () => toast.error("Error al registrar movimiento"),
   });
 }
 

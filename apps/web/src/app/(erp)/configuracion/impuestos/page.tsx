@@ -9,8 +9,8 @@ import {
 } from "@/hooks/queries/use-orders";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { configuracionImpuestoSchema, type ConfiguracionImpuestoInput } from "@nexora/shared/schemas";
-import type { ConfiguracionImpuesto } from "@nexora/shared/types";
+import { configuracionImpuestoSchema, type ConfiguracionImpuestoInput } from "@pronto/shared/schemas";
+import type { ConfiguracionImpuesto } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,

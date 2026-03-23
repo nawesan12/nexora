@@ -34,13 +34,13 @@ echo "==> Starting Docker services (Postgres + Redis)..."
 docker compose -f "$ROOT_DIR/docker-compose.yml" up -d
 
 echo "==> Waiting for Postgres to be ready..."
-until docker exec nexora-postgres pg_isready -U nexora -q 2>/dev/null; do
+until docker exec pronto-postgres pg_isready -U pronto -q 2>/dev/null; do
   sleep 1
 done
 echo "    Postgres ready."
 
 echo "==> Waiting for Redis to be ready..."
-until docker exec nexora-redis redis-cli ping 2>/dev/null | grep -q PONG; do
+until docker exec pronto-redis redis-cli ping 2>/dev/null | grep -q PONG; do
   sleep 1
 done
 echo "    Redis ready."
@@ -54,7 +54,7 @@ else
 fi
 
 # 3. Start Go API (export env vars from Docker config)
-export DATABASE_URL="postgres://nexora:nexora@localhost:5433/nexora?sslmode=disable"
+export DATABASE_URL="postgres://pronto:pronto@localhost:5433/pronto?sslmode=disable"
 export REDIS_URL="redis://localhost:6379/0"
 export API_PORT=8080
 export API_HOST=0.0.0.0
@@ -64,6 +64,7 @@ export JWT_REFRESH_SECRET="change-me-in-production-refresh"
 export JWT_EXPIRY=15m
 export JWT_REFRESH_EXPIRY=168h
 export CORS_ALLOWED_ORIGINS="http://localhost:3000"
+export APP_URL="http://localhost:3000"
 
 echo "==> Starting Go API (port 8080)..."
 (cd "$API_DIR" && go run ./cmd/server) &
@@ -71,12 +72,12 @@ PIDS+=($!)
 
 # 4. Start Next.js dev server
 echo "==> Starting Next.js dev server (port 3000)..."
-(cd "$ROOT_DIR" && pnpm --filter @nexora/web dev) &
+(cd "$ROOT_DIR" && pnpm --filter @pronto/web dev) &
 PIDS+=($!)
 
 echo ""
 echo "============================================"
-echo "  Nexora dev environment running"
+echo "  Pronto dev environment running"
 echo "  API:  http://localhost:8080"
 echo "  Web:  http://localhost:3000"
 echo "  Press Ctrl+C to stop all services"

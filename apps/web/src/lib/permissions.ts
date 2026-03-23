@@ -1,4 +1,4 @@
-import type { Permission } from "@nexora/shared/constants";
+import type { Permission } from "@pronto/shared/constants";
 
 export function hasPermission(
   permissions: string[],

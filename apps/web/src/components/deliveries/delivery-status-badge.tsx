@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { ESTADO_REPARTO_LABELS } from "@nexora/shared/constants";
+import { ESTADO_REPARTO_LABELS } from "@pronto/shared/constants";
 
 const variants: Record<string, string> = {
   PLANIFICADO: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",

@@ -12,7 +12,7 @@ import {
   type RegisterStep1Input,
   type RegisterStep2Input,
   type RegisterStep3Input,
-} from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
 import { authApi } from "@/lib/auth";
 import { useUserStore } from "@/store/user-store";
 import { ApiClientError } from "@/lib/api-client";

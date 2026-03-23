@@ -9,7 +9,7 @@ function formatCurrency(n: number) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(n);
 }
 
-const COLORS = ["#7C3AED", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
+const COLORS = ["#D97706", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#F59E0B", "#EC4899"];
 
 interface Props { desde: string; hasta: string; }
 

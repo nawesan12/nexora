@@ -9,7 +9,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nexora-erp/nexora/internal/repository"
+	"github.com/pronto-erp/pronto/internal/pkg/cuit"
+	"github.com/pronto-erp/pronto/internal/repository"
 )
 
 var (
@@ -81,6 +82,9 @@ type ProveedorResponse struct {
 // --- Methods ---
 
 func (s *ProveedorService) CreateProveedor(ctx context.Context, userID pgtype.UUID, input CreateProveedorInput) (*ProveedorResponse, error) {
+	if err := cuit.Validate(input.Cuit); err != nil {
+		return nil, fmt.Errorf("CUIT invalido: %w", err)
+	}
 	if input.Cuit != "" {
 		existing, err := s.queries.GetProveedorByCuit(ctx, repository.GetProveedorByCuitParams{
 			Cuit:      pgText(input.Cuit),
@@ -133,6 +137,9 @@ func (s *ProveedorService) GetProveedor(ctx context.Context, userID pgtype.UUID,
 }
 
 func (s *ProveedorService) UpdateProveedor(ctx context.Context, userID pgtype.UUID, id string, input UpdateProveedorInput) (*ProveedorResponse, error) {
+	if err := cuit.Validate(input.Cuit); err != nil {
+		return nil, fmt.Errorf("CUIT invalido: %w", err)
+	}
 	pgID, err := pgUUID(id)
 	if err != nil {
 		return nil, ErrProveedorNotFound

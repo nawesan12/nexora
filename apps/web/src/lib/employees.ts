@@ -1,6 +1,6 @@
 import { api } from "@/lib/api-client";
-import type { Empleado, EmpleadoBranch } from "@nexora/shared/types";
-import type { EmpleadoInput } from "@nexora/shared/schemas";
+import type { Empleado, EmpleadoBranch } from "@pronto/shared/types";
+import type { EmpleadoInput } from "@pronto/shared/schemas";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 

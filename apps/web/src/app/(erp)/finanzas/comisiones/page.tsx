@@ -238,7 +238,7 @@ export default function ComisionesPage() {
                       <TableCell>
                         <Badge
                           variant="secondary"
-                          className="border-0 bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400"
+                          className="border-0 bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400"
                         >
                           {c.porcentaje}%
                         </Badge>

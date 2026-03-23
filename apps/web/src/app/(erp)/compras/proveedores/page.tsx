@@ -46,7 +46,7 @@ const CONDICION_IVA_LABELS: Record<string, string> = {
 
 const IVA_COLORS: Record<string, string> = {
   RESPONSABLE_INSCRIPTO:
-    "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
+    "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",
   MONOTRIBUTO:
     "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400",
   EXENTO:

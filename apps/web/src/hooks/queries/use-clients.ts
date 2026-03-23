@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { clientesApi, direccionesApi } from "@/lib/clients";
-import type { ClienteInput, DireccionInput } from "@nexora/shared/schemas";
+import type { ClienteInput, DireccionInput } from "@pronto/shared/schemas";
 
 // --- Clientes ---
 

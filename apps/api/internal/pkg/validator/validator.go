@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/nexora-erp/nexora/internal/pkg/response"
+	"github.com/pronto-erp/pronto/internal/pkg/response"
 )
 
 var validate = validator.New()

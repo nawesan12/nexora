@@ -130,8 +130,8 @@ The business has a well-organized team with clear role separation that maps dire
 
 ## 2. NEW BRAND IDENTITY
 
-### Brand Name: **Nexora**
-> "Nexora" = Next + Ora (Latin for "edge/frontier"). Clean, modern, tech-forward.
+### Brand Name: **Pronto**
+> "Pronto" = Next + Ora (Latin for "edge/frontier"). Clean, modern, tech-forward.
 
 ### Tagline
 > "Operations, simplified."
@@ -2070,7 +2070,7 @@ PORT=8080
 ENV=development                    # development | staging | production
 
 # Database
-DATABASE_URL=postgresql://user:pass@localhost:5432/nexora?sslmode=disable
+DATABASE_URL=postgresql://user:pass@localhost:5432/pronto?sslmode=disable
 
 # Redis
 REDIS_URL=redis://localhost:6379

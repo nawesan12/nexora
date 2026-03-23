@@ -21,7 +21,7 @@ export const useCurrencyStore = create<CurrencyState>()(
       setExchangeRate: (exchangeRate) => set({ exchangeRate }),
     }),
     {
-      name: "nexora-currency",
+      name: "pronto-currency",
     },
   ),
 );

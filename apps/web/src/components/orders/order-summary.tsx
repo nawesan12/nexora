@@ -31,7 +31,7 @@ export function OrderSummary({
 }: Props) {
   return (
     <Card className="border-0 shadow-sm overflow-hidden">
-      <div className="h-1 bg-gradient-to-r from-primary to-violet-500" />
+      <div className="h-1 bg-gradient-to-r from-primary to-amber-500" />
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-semibold">Resumen</CardTitle>
       </CardHeader>

@@ -3,7 +3,7 @@
 import { useState, useRef, useLayoutEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { afipConfigSchema, type AfipConfigInput } from "@nexora/shared/schemas";
+import { afipConfigSchema, type AfipConfigInput } from "@pronto/shared/schemas";
 import { useBranches } from "@/hooks/queries/use-branches";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { afipApi } from "@/lib/afip";

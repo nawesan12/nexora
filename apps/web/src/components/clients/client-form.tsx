@@ -6,8 +6,8 @@ import {
   clienteSchema,
   condicionIvaValues,
   reputacionValues,
-} from "@nexora/shared/schemas";
-import type { ClienteInput } from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
+import type { ClienteInput } from "@pronto/shared/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";

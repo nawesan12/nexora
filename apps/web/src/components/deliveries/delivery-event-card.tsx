@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { TIPO_EVENTO_LABELS } from "@nexora/shared/constants";
+import { TIPO_EVENTO_LABELS } from "@pronto/shared/constants";
 import {
   MapPin,
   CheckCircle,

@@ -43,9 +43,9 @@ func (q *Queries) CountRepartosByEstado(ctx context.Context, arg CountRepartosBy
 const createEventoReparto = `-- name: CreateEventoReparto :one
 INSERT INTO eventos_reparto (
     reparto_id, pedido_id, tipo, latitud, longitud, comentario,
-    monto_cobrado, empleado_id
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, reparto_id, pedido_id, tipo, latitud, longitud, comentario, monto_cobrado, empleado_id, created_at
+    monto_cobrado, empleado_id, firma_url
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, reparto_id, pedido_id, tipo, latitud, longitud, comentario, monto_cobrado, empleado_id, firma_url, created_at
 `
 
 type CreateEventoRepartoParams struct {
@@ -57,6 +57,7 @@ type CreateEventoRepartoParams struct {
 	Comentario   pgtype.Text       `json:"comentario"`
 	MontoCobrado pgtype.Numeric    `json:"monto_cobrado"`
 	EmpleadoID   pgtype.UUID       `json:"empleado_id"`
+	FirmaURL     pgtype.Text       `json:"firma_url"`
 }
 
 func (q *Queries) CreateEventoReparto(ctx context.Context, arg CreateEventoRepartoParams) (EventosReparto, error) {
@@ -69,6 +70,7 @@ func (q *Queries) CreateEventoReparto(ctx context.Context, arg CreateEventoRepar
 		arg.Comentario,
 		arg.MontoCobrado,
 		arg.EmpleadoID,
+		arg.FirmaURL,
 	)
 	var i EventosReparto
 	err := row.Scan(
@@ -81,6 +83,7 @@ func (q *Queries) CreateEventoReparto(ctx context.Context, arg CreateEventoRepar
 		&i.Comentario,
 		&i.MontoCobrado,
 		&i.EmpleadoID,
+		&i.FirmaURL,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -254,7 +257,7 @@ func (q *Queries) GetRepartoByID(ctx context.Context, arg GetRepartoByIDParams) 
 }
 
 const listEventosReparto = `-- name: ListEventosReparto :many
-SELECT er.id, er.reparto_id, er.pedido_id, er.tipo, er.latitud, er.longitud, er.comentario, er.monto_cobrado, er.empleado_id, er.created_at,
+SELECT er.id, er.reparto_id, er.pedido_id, er.tipo, er.latitud, er.longitud, er.comentario, er.monto_cobrado, er.empleado_id, er.firma_url, er.created_at,
        p.numero AS pedido_numero,
        e.nombre AS empleado_nombre
 FROM eventos_reparto er
@@ -274,6 +277,7 @@ type ListEventosRepartoRow struct {
 	Comentario     pgtype.Text        `json:"comentario"`
 	MontoCobrado   pgtype.Numeric     `json:"monto_cobrado"`
 	EmpleadoID     pgtype.UUID        `json:"empleado_id"`
+	FirmaURL       pgtype.Text        `json:"firma_url"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 	PedidoNumero   pgtype.Text        `json:"pedido_numero"`
 	EmpleadoNombre pgtype.Text        `json:"empleado_nombre"`
@@ -298,6 +302,7 @@ func (q *Queries) ListEventosReparto(ctx context.Context, repartoID pgtype.UUID)
 			&i.Comentario,
 			&i.MontoCobrado,
 			&i.EmpleadoID,
+			&i.FirmaURL,
 			&i.CreatedAt,
 			&i.PedidoNumero,
 			&i.EmpleadoNombre,

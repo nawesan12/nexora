@@ -2,12 +2,12 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { empleadoSchema, type EmpleadoInput } from "@nexora/shared/schemas";
+import { empleadoSchema, type EmpleadoInput } from "@pronto/shared/schemas";
 import {
   ROLE_LABELS,
   ESTADO_EMPLEADO_LABELS,
   TIPO_CONTRATO_LABELS,
-} from "@nexora/shared/constants";
+} from "@pronto/shared/constants";
 import { useUserStore } from "@/store/user-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

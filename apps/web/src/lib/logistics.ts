@@ -5,7 +5,7 @@ import type {
   RepartoList,
   RepartoDetail,
   EventoReparto,
-} from "@nexora/shared/types";
+} from "@pronto/shared/types";
 
 // Vehiculos
 interface ListVehiculosParams {

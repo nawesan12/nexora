@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nexora-erp/nexora/internal/repository"
+	"github.com/pronto-erp/pronto/internal/repository"
 )
 
 var (
@@ -56,6 +56,7 @@ type ProductoResponse struct {
 	Descripcion     string  `json:"descripcion,omitempty"`
 	PrecioBase      float64 `json:"precio_base"`
 	Unidad          string  `json:"unidad"`
+	AlicuotaIVA     string  `json:"alicuota_iva"`
 	CategoriaID     string  `json:"categoria_id,omitempty"`
 	CategoriaNombre string  `json:"categoria_nombre,omitempty"`
 	FamiliaNombre   string  `json:"familia_nombre,omitempty"`
@@ -104,6 +105,7 @@ type CreateProductoInput struct {
 	PrecioBase  float64 `json:"precio_base" validate:"gte=0"`
 	Unidad      string  `json:"unidad" validate:"required,oneof=KG UNIDAD LITRO METRO CAJA BOLSA PACK"`
 	CategoriaID string  `json:"categoria_id"`
+	AlicuotaIVA string  `json:"alicuota_iva" validate:"omitempty,oneof=0 2.5 5 10.5 21 27 EXENTO NO_GRAVADO"`
 }
 
 type UpdateProductoInput struct {
@@ -113,6 +115,7 @@ type UpdateProductoInput struct {
 	PrecioBase  float64 `json:"precio_base" validate:"gte=0"`
 	Unidad      string  `json:"unidad" validate:"required,oneof=KG UNIDAD LITRO METRO CAJA BOLSA PACK"`
 	CategoriaID string  `json:"categoria_id"`
+	AlicuotaIVA string  `json:"alicuota_iva" validate:"omitempty,oneof=0 2.5 5 10.5 21 27 EXENTO NO_GRAVADO"`
 }
 
 type UpsertCatalogoInput struct {
@@ -437,6 +440,10 @@ func (s *ProductService) CreateProducto(ctx context.Context, userID pgtype.UUID,
 		return nil, fmt.Errorf("create producto: %w", err)
 	}
 
+	alicuota := input.AlicuotaIVA
+	if alicuota == "" {
+		alicuota = "21"
+	}
 	return &ProductoResponse{
 		ID:          uuidStrFromPg(p.ID),
 		Codigo:      textFromPg(p.Codigo),
@@ -444,6 +451,7 @@ func (s *ProductService) CreateProducto(ctx context.Context, userID pgtype.UUID,
 		Descripcion: textFromPg(p.Descripcion),
 		PrecioBase:  floatFromNumeric(p.PrecioBase),
 		Unidad:      string(p.Unidad),
+		AlicuotaIVA: alicuota,
 		CategoriaID: uuidStrFromPg(p.CategoriaID),
 	}, nil
 }
@@ -546,6 +554,10 @@ func (s *ProductService) UpdateProducto(ctx context.Context, userID pgtype.UUID,
 		return nil, fmt.Errorf("update producto: %w", err)
 	}
 
+	alicuotaUpd := input.AlicuotaIVA
+	if alicuotaUpd == "" {
+		alicuotaUpd = "21"
+	}
 	return &ProductoResponse{
 		ID:          uuidStrFromPg(p.ID),
 		Codigo:      textFromPg(p.Codigo),
@@ -553,6 +565,7 @@ func (s *ProductService) UpdateProducto(ctx context.Context, userID pgtype.UUID,
 		Descripcion: textFromPg(p.Descripcion),
 		PrecioBase:  floatFromNumeric(p.PrecioBase),
 		Unidad:      string(p.Unidad),
+		AlicuotaIVA: alicuotaUpd,
 		CategoriaID: uuidStrFromPg(p.CategoriaID),
 	}, nil
 }
@@ -575,6 +588,7 @@ func toProductoResponseFromRow(p repository.GetProductoByIDRow) *ProductoRespons
 		Descripcion:     textFromPg(p.Descripcion),
 		PrecioBase:      floatFromNumeric(p.PrecioBase),
 		Unidad:          string(p.Unidad),
+		AlicuotaIVA:     "21",
 		CategoriaID:     uuidStrFromPg(p.CategoriaID),
 		CategoriaNombre: textFromPg(p.CategoriaNombre),
 		FamiliaNombre:   textFromPg(p.FamiliaNombre),
@@ -589,6 +603,7 @@ func toProductoResponseFromList(p repository.ListProductosRow) *ProductoResponse
 		Descripcion:     textFromPg(p.Descripcion),
 		PrecioBase:      floatFromNumeric(p.PrecioBase),
 		Unidad:          string(p.Unidad),
+		AlicuotaIVA:     "21",
 		CategoriaID:     uuidStrFromPg(p.CategoriaID),
 		CategoriaNombre: textFromPg(p.CategoriaNombre),
 		FamiliaNombre:   textFromPg(p.FamiliaNombre),
@@ -603,6 +618,7 @@ func toProductoResponseFromSearch(p repository.SearchProductosRow) *ProductoResp
 		Descripcion:     textFromPg(p.Descripcion),
 		PrecioBase:      floatFromNumeric(p.PrecioBase),
 		Unidad:          string(p.Unidad),
+		AlicuotaIVA:     "21",
 		CategoriaID:     uuidStrFromPg(p.CategoriaID),
 		CategoriaNombre: textFromPg(p.CategoriaNombre),
 		FamiliaNombre:   textFromPg(p.FamiliaNombre),
@@ -705,4 +721,41 @@ func toCatalogoResponse(c repository.CatalogoProducto) *CatalogoResponse {
 		Precio:     floatFromNumeric(c.Precio),
 		Stock:      c.Stock,
 	}
+}
+
+// --- Bulk Import ---
+
+type BulkImportResult struct {
+	Total    int                  `json:"total"`
+	Success  int                  `json:"success"`
+	Failed   int                  `json:"failed"`
+	Errors   []BulkImportError    `json:"errors,omitempty"`
+	Products []ProductoResponse   `json:"products,omitempty"`
+}
+
+type BulkImportError struct {
+	Row     int    `json:"row"`
+	Nombre  string `json:"nombre,omitempty"`
+	Error   string `json:"error"`
+}
+
+func (s *ProductService) BulkImport(ctx context.Context, userID pgtype.UUID, items []CreateProductoInput) (*BulkImportResult, error) {
+	result := &BulkImportResult{Total: len(items)}
+
+	for i, item := range items {
+		p, err := s.CreateProducto(ctx, userID, item)
+		if err != nil {
+			result.Failed++
+			result.Errors = append(result.Errors, BulkImportError{
+				Row:    i + 1,
+				Nombre: item.Nombre,
+				Error:  err.Error(),
+			})
+			continue
+		}
+		result.Success++
+		result.Products = append(result.Products, *p)
+	}
+
+	return result, nil
 }

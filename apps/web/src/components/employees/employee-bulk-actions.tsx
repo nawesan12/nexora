@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ROLE_LABELS, ESTADO_EMPLEADO_LABELS } from "@nexora/shared/constants";
-import type { Empleado } from "@nexora/shared/types";
+import { ROLE_LABELS, ESTADO_EMPLEADO_LABELS } from "@pronto/shared/constants";
+import type { Empleado } from "@pronto/shared/types";
 import { useUserStore } from "@/store/user-store";
 import {
   useBulkUpdateEstado,

@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { UserInfo } from "@nexora/shared/types";
+import type { UserInfo } from "@pronto/shared/types";
 
 interface UserState {
   user: UserInfo | null;
@@ -26,7 +26,7 @@ export const useUserStore = create<UserState>()(
       setHydrated: (hydrated) => set({ isHydrated: hydrated }),
     }),
     {
-      name: "nexora-user",
+      name: "pronto-user",
       onRehydrateStorage: () => (state) => {
         state?.setHydrated(true);
       },

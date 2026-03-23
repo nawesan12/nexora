@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nexora-erp/nexora/internal/repository"
+	"github.com/pronto-erp/pronto/internal/repository"
 )
 
 var (
@@ -396,6 +396,7 @@ type EventoRepartoResponse struct {
 	Longitud       float64 `json:"longitud,omitempty"`
 	Comentario     string  `json:"comentario,omitempty"`
 	MontoCobrado   float64 `json:"monto_cobrado,omitempty"`
+	FirmaURL       string  `json:"firma_url,omitempty"`
 	EmpleadoNombre string  `json:"empleado_nombre,omitempty"`
 	CreatedAt      string  `json:"created_at"`
 }
@@ -436,6 +437,7 @@ type CreateEventoInput struct {
 	Comentario   string  `json:"comentario"`
 	MontoCobrado float64 `json:"monto_cobrado"`
 	EmpleadoID   string  `json:"empleado_id"`
+	FirmaURL     string  `json:"firma_url"`
 }
 
 // --- Repartos CRUD ---
@@ -597,6 +599,7 @@ func (s *LogisticsService) GetReparto(ctx context.Context, userID pgtype.UUID, i
 			Longitud:       floatFromNumeric(e.Longitud),
 			Comentario:     textFromPg(e.Comentario),
 			MontoCobrado:   floatFromNumeric(e.MontoCobrado),
+			FirmaURL:       textFromPg(e.FirmaURL),
 			EmpleadoNombre: textFromPg(e.EmpleadoNombre),
 			CreatedAt:      e.CreatedAt.Time.Format(time.RFC3339),
 		})
@@ -807,6 +810,7 @@ func (s *LogisticsService) CreateEvento(ctx context.Context, userID pgtype.UUID,
 		Comentario:   pgText(input.Comentario),
 		MontoCobrado: numericFromFloat(input.MontoCobrado),
 		EmpleadoID:   empleadoID,
+		FirmaURL:     pgText(input.FirmaURL),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create evento: %w", err)
@@ -821,6 +825,7 @@ func (s *LogisticsService) CreateEvento(ctx context.Context, userID pgtype.UUID,
 		Longitud:     floatFromNumeric(e.Longitud),
 		Comentario:   textFromPg(e.Comentario),
 		MontoCobrado: floatFromNumeric(e.MontoCobrado),
+		FirmaURL:     textFromPg(e.FirmaURL),
 		CreatedAt:    e.CreatedAt.Time.Format(time.RFC3339),
 	}, nil
 }
@@ -858,6 +863,7 @@ func (s *LogisticsService) ListEventos(ctx context.Context, userID pgtype.UUID, 
 			Longitud:       floatFromNumeric(e.Longitud),
 			Comentario:     textFromPg(e.Comentario),
 			MontoCobrado:   floatFromNumeric(e.MontoCobrado),
+			FirmaURL:       textFromPg(e.FirmaURL),
 			EmpleadoNombre: textFromPg(e.EmpleadoNombre),
 			CreatedAt:      e.CreatedAt.Time.Format(time.RFC3339),
 		})

@@ -26,9 +26,9 @@ func NewProcessor(redisURL string) *asynq.Server {
 	return srv
 }
 
-func RegisterHandlers(mux *asynq.ServeMux) {
-	mux.HandleFunc(TaskSendEmail, HandleSendEmail)
-	mux.HandleFunc(TaskSendPasswordReset, HandleSendEmail)
-	mux.HandleFunc(TaskSendEmailVerification, HandleSendEmail)
-	mux.HandleFunc(TaskSendOrderNotification, HandleSendEmail)
+func RegisterHandlers(mux *asynq.ServeMux, ew *EmailWorker) {
+	mux.HandleFunc(TaskSendEmail, ew.HandleSendEmail)
+	mux.HandleFunc(TaskSendPasswordReset, ew.HandleSendEmail)
+	mux.HandleFunc(TaskSendEmailVerification, ew.HandleSendEmail)
+	mux.HandleFunc(TaskSendOrderNotification, ew.HandleSendEmail)
 }

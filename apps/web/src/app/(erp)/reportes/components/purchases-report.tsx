@@ -32,7 +32,7 @@ export function PurchasesReport({ desde, hasta }: Props) {
                 <XAxis dataKey="month" className="text-xs" />
                 <YAxis className="text-xs" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                <Bar dataKey="total" fill="#7C3AED" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total" fill="#D97706" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : <p className="text-sm text-muted-foreground text-center py-8">Sin datos</p>}

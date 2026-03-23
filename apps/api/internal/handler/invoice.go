@@ -2,14 +2,16 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/nexora-erp/nexora/internal/middleware"
-	"github.com/nexora-erp/nexora/internal/pkg/pagination"
-	"github.com/nexora-erp/nexora/internal/pkg/response"
-	"github.com/nexora-erp/nexora/internal/pkg/validator"
-	"github.com/nexora-erp/nexora/internal/service"
+	"github.com/pronto-erp/pronto/internal/middleware"
+	"github.com/pronto-erp/pronto/internal/pkg/pagination"
+	"github.com/pronto-erp/pronto/internal/pkg/response"
+	"github.com/pronto-erp/pronto/internal/pkg/validator"
+	"github.com/pronto-erp/pronto/internal/service"
 )
 
 type InvoiceHandler struct {
@@ -157,4 +159,48 @@ func (h *InvoiceHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.NoContent(w)
+}
+
+func (h *InvoiceHandler) GetBatchPDF(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r.Context())
+	userID := middleware.PgUserID(claims)
+	fecha := r.URL.Query().Get("fecha")
+
+	if fecha == "" {
+		response.Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "el parametro 'fecha' es obligatorio (formato: YYYY-MM-DD)")
+		return
+	}
+
+	buf, filename, err := h.invoiceSvc.GenerateBatchPDF(r.Context(), userID, fecha)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", fmt.Sprintf("error al generar batch PDF: %v", err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	w.Write(buf.Bytes())
+}
+
+func (h *InvoiceHandler) GetPDF(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r.Context())
+	userID := middleware.PgUserID(claims)
+	id := chi.URLParam(r, "id")
+	formato := r.URL.Query().Get("formato")
+
+	buf, filename, err := h.invoiceSvc.GeneratePDF(r.Context(), userID, id, formato)
+	if err != nil {
+		if errors.Is(err, service.ErrComprobanteNotFound) {
+			response.Error(w, http.StatusNotFound, "NOT_FOUND", "factura no encontrada")
+			return
+		}
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", fmt.Sprintf("error al generar PDF: %v", err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	w.Write(buf.Bytes())
 }

@@ -1,6 +1,6 @@
 import { api } from "@/lib/api-client";
-import type { Branch } from "@nexora/shared/types";
-import type { SucursalInput } from "@nexora/shared/schemas";
+import type { Branch } from "@pronto/shared/types";
+import type { SucursalInput } from "@pronto/shared/schemas";
 
 export const branchesApi = {
   list: () => api.getWithMeta<Branch[]>("/api/v1/configuracion/sucursales"),

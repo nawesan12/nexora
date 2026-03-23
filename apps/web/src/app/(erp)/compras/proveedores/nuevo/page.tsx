@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { proveedorSchema, type ProveedorInput } from "@nexora/shared/schemas";
+import { proveedorSchema, type ProveedorInput } from "@pronto/shared/schemas";
 import { useCreateProveedor } from "@/hooks/queries/use-suppliers";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

@@ -1,7 +1,7 @@
 "use client";
 
-import type { HistorialPedido } from "@nexora/shared/types";
-import { ORDER_STATUS_LABELS } from "@nexora/shared/constants";
+import type { HistorialPedido } from "@pronto/shared/types";
+import { ORDER_STATUS_LABELS } from "@pronto/shared/constants";
 import { OrderStatusBadge } from "./order-status-badge";
 
 export function OrderStatusTimeline({ historial }: { historial: HistorialPedido[] }) {

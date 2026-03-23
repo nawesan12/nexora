@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { facturasApi } from "@/lib/invoices";
 import { afipApi } from "@/lib/afip";
-import type { CreateFromPedidoInput, CreateManualComprobanteInput } from "@nexora/shared/schemas";
+import type { CreateFromPedidoInput, CreateManualComprobanteInput } from "@pronto/shared/schemas";
 
 export function useFacturas({
   page = 1,

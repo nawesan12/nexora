@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { LogOut, User, Settings } from "lucide-react";
 import { useUserStore } from "@/store/user-store";
 import { authApi } from "@/lib/auth";
-import { ROLE_LABELS } from "@nexora/shared/constants";
+import { ROLE_LABELS } from "@pronto/shared/constants";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import type { Rol } from "@nexora/shared/constants";
+import type { Rol } from "@pronto/shared/constants";
 
 export function UserMenu() {
   const router = useRouter();

@@ -1,14 +1,17 @@
 package handler
 
 import (
+	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/nexora-erp/nexora/internal/middleware"
-	"github.com/nexora-erp/nexora/internal/pkg/response"
-	"github.com/nexora-erp/nexora/internal/service"
+	"github.com/pronto-erp/pronto/internal/middleware"
+	"github.com/pronto-erp/pronto/internal/pkg/excel"
+	"github.com/pronto-erp/pronto/internal/pkg/response"
+	"github.com/pronto-erp/pronto/internal/service"
 )
 
 type ReportHandler struct {
@@ -183,4 +186,131 @@ func (h *ReportHandler) ExportFinanceCSV(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", "attachment; filename=finanzas.csv")
 	io.Copy(w, service.ExportToCSV(headers, rows))
+}
+
+// ──────────────────────────────────────────────
+// Excel Exports
+// ──────────────────────────────────────────────
+
+func (h *ReportHandler) ExportSalesExcel(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r.Context())
+	userID := middleware.PgUserID(claims)
+	filters := parseReportFilters(r)
+
+	result, err := h.svc.GetSalesReport(r.Context(), userID, filters)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "error al exportar ventas")
+		return
+	}
+
+	headers := []string{"Cliente", "Total", "Cantidad"}
+	rows := make([][]string, len(result.ByClient))
+	for i, item := range result.ByClient {
+		rows[i] = []string{item.Label, service.FormatFloat(item.Value), service.FormatInt(item.Count)}
+	}
+
+	buf, err := excel.GenerateExcel("Ventas", headers, rows)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "error al generar Excel")
+		return
+	}
+
+	now := time.Now()
+	filename := fmt.Sprintf("ventas-%d-%02d.xlsx", now.Year(), now.Month())
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	w.Write(buf.Bytes())
+}
+
+func (h *ReportHandler) ExportPurchasesExcel(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r.Context())
+	userID := middleware.PgUserID(claims)
+	filters := parseReportFilters(r)
+
+	result, err := h.svc.GetPurchasesReport(r.Context(), userID, filters)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "error al exportar compras")
+		return
+	}
+
+	headers := []string{"Proveedor", "Total", "Cantidad"}
+	rows := make([][]string, len(result.BySupplier))
+	for i, item := range result.BySupplier {
+		rows[i] = []string{item.Label, service.FormatFloat(item.Value), service.FormatInt(item.Count)}
+	}
+
+	buf, err := excel.GenerateExcel("Compras", headers, rows)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "error al generar Excel")
+		return
+	}
+
+	now := time.Now()
+	filename := fmt.Sprintf("compras-%d-%02d.xlsx", now.Year(), now.Month())
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	w.Write(buf.Bytes())
+}
+
+func (h *ReportHandler) ExportInventoryExcel(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r.Context())
+	userID := middleware.PgUserID(claims)
+
+	result, err := h.svc.GetInventoryReport(r.Context(), userID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "error al exportar inventario")
+		return
+	}
+
+	headers := []string{"Producto", "Codigo", "Sucursal", "Stock", "Precio", "Valor Total"}
+	rows := make([][]string, len(result.StockValuation))
+	for i, item := range result.StockValuation {
+		rows[i] = []string{item.ProductoNombre, item.ProductoCodigo, item.SucursalNombre, service.FormatInt(int64(item.Stock)), service.FormatFloat(item.Precio), service.FormatFloat(item.ValorTotal)}
+	}
+
+	buf, err := excel.GenerateExcel("Inventario", headers, rows)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "error al generar Excel")
+		return
+	}
+
+	now := time.Now()
+	filename := fmt.Sprintf("inventario-%d-%02d.xlsx", now.Year(), now.Month())
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	w.Write(buf.Bytes())
+}
+
+func (h *ReportHandler) ExportFinanceExcel(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r.Context())
+	userID := middleware.PgUserID(claims)
+	filters := parseReportFilters(r)
+
+	result, err := h.svc.GetFinanceReport(r.Context(), userID, filters)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "error al exportar finanzas")
+		return
+	}
+
+	headers := []string{"Mes", "Ingresos", "Gastos"}
+	rows := make([][]string, len(result.IncomeVsExpenses))
+	for i, item := range result.IncomeVsExpenses {
+		rows[i] = []string{item.Month, service.FormatFloat(item.Ingresos), service.FormatFloat(item.Gastos)}
+	}
+
+	buf, err := excel.GenerateExcel("Finanzas", headers, rows)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "error al generar Excel")
+		return
+	}
+
+	now := time.Now()
+	filename := fmt.Sprintf("finanzas-%d-%02d.xlsx", now.Year(), now.Month())
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	w.Write(buf.Bytes())
 }

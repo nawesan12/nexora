@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { productoSchema, type ProductoInput } from "@nexora/shared/schemas";
+import { productoSchema, type ProductoInput } from "@pronto/shared/schemas";
 import {
   Form,
   FormControl,
@@ -27,7 +27,7 @@ import {
 import { useFamilias } from "@/hooks/queries/use-products";
 import { useCategoriasByFamilia } from "@/hooks/queries/use-products";
 import { useState } from "react";
-import type { Producto } from "@nexora/shared/types";
+import type { Producto } from "@pronto/shared/types";
 import { Loader2 } from "lucide-react";
 
 const UNIDADES = [

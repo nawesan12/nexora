@@ -1,13 +1,13 @@
-# Nexora ERP
+# Pronto ERP
 
-> "Operations, simplified." — Full-stack ERP system for distribution companies.
+> "Tu negocio, al instante." — Full-stack ERP system for distribution companies.
 
 ## Architecture
 
 Turborepo monorepo with three layers:
 
 ```
-nexora/
+pronto/
 ├── apps/
 │   ├── api/         # Go (Chi) REST API server
 │   └── web/         # Next.js 16 (App Router, TailwindCSS 4, shadcn/ui)
@@ -30,8 +30,8 @@ pnpm turbo build                # Build everything
 pnpm turbo dev                  # Dev all apps
 
 # Web
-pnpm --filter @nexora/web dev   # Next.js dev server (port 3000)
-pnpm --filter @nexora/web build # Production build
+pnpm --filter @pronto/web dev   # Next.js dev server (port 3000)
+pnpm --filter @pronto/web build # Production build
 
 # API
 cd apps/api
@@ -49,7 +49,7 @@ docker compose ps               # Check status
 ## Conventions
 
 ### Go (apps/api)
-- Module: `github.com/nexora-erp/nexora`
+- Module: `github.com/pronto-erp/pronto`
 - Standard project layout: `cmd/`, `internal/`, `migrations/`, `queries/`
 - Config via struct tags: `envconfig:"VAR_NAME"`
 - Structured JSON logging: zerolog
@@ -60,7 +60,7 @@ docker compose ps               # Check status
 ### TypeScript (apps/web, packages/*)
 - Strict mode, ES2022 target, bundler module resolution
 - Path alias: `@/*` → `./src/*` (web only)
-- Package imports: `@nexora/shared/constants`, `@nexora/shared/types`
+- Package imports: `@pronto/shared/constants`, `@pronto/shared/types`
 - CSS variables for design tokens (no hardcoded colors)
 - Components use `cn()` helper from `@/lib/utils`
 
@@ -79,8 +79,8 @@ docker compose ps               # Check status
 
 ## Design Tokens
 
-Light mode primary: Deep Indigo `#1E1B4B`, Accent: Electric Violet `#7C3AED`.
-Dark mode primary: `#A78BFA`, backgrounds: `#0F172A` / `#1E293B`.
+Light mode primary: Deep Teal `#134E4A`, Accent: Warm Amber `#D97706`.
+Dark mode primary: `#5EEAD4`, backgrounds: `#0F172A` / `#1E293B`.
 Semantic: success `#10B981`, warning `#F59E0B`, error `#EF4444`, info `#3B82F6`.
 Fonts: Inter (sans), JetBrains Mono (mono). Radius: 0.5rem.
 

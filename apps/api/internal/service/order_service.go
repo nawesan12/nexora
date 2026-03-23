@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nexora-erp/nexora/internal/repository"
+	"github.com/pronto-erp/pronto/internal/repository"
+	"github.com/pronto-erp/pronto/internal/worker"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -21,16 +24,22 @@ var (
 )
 
 type OrderService struct {
-	db       *pgxpool.Pool
-	queries  *repository.Queries
-	stockSvc *StockService
+	db              *pgxpool.Pool
+	queries         *repository.Queries
+	stockSvc        *StockService
+	notificationSvc *NotificationService
+	asynqClient     *asynq.Client
+	appURL          string
 }
 
-func NewOrderService(db *pgxpool.Pool, stockSvc *StockService) *OrderService {
+func NewOrderService(db *pgxpool.Pool, stockSvc *StockService, notificationSvc *NotificationService, asynqClient *asynq.Client, appURL string) *OrderService {
 	return &OrderService{
-		db:       db,
-		queries:  repository.New(db),
-		stockSvc: stockSvc,
+		db:              db,
+		queries:         repository.New(db),
+		stockSvc:        stockSvc,
+		notificationSvc: notificationSvc,
+		asynqClient:     asynqClient,
+		appURL:          appURL,
 	}
 }
 
@@ -692,6 +701,42 @@ func (s *OrderService) TransitionEstado(ctx context.Context, userID pgtype.UUID,
 
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("commit tx: %w", err)
+	}
+
+	// Enqueue email notification for status change
+	if s.asynqClient != nil {
+		go func() {
+			var clientEmail, clientNombre string
+			row := s.db.QueryRow(context.Background(),
+				`SELECT COALESCE(cl.email, ''), cl.nombre FROM pedidos p JOIN clientes cl ON cl.id = p.cliente_id WHERE p.id = $1`, pgID)
+			if err := row.Scan(&clientEmail, &clientNombre); err == nil && clientEmail != "" {
+				task, err := worker.NewOrderNotificationTask(
+					clientEmail, clientNombre, pedido.Numero,
+					currentState, newState, s.appURL+"/ventas/pedidos/"+id,
+				)
+				if err == nil {
+					if _, err := s.asynqClient.Enqueue(task); err != nil {
+						log.Error().Err(err).Str("pedido", id).Msg("failed to enqueue order notification")
+					}
+				}
+			}
+		}()
+	}
+
+	// In-app notification for order status change
+	if s.notificationSvc != nil {
+		go func() {
+			_, err := s.notificationSvc.Create(context.Background(), CreateNotificacionInput{
+				DestinatarioID: userID,
+				Tipo:           repository.TipoNotificacionPEDIDOESTADO,
+				Titulo:         "Pedido " + pedido.Numero + " actualizado",
+				Mensaje:        "Estado cambiado a " + newState,
+				Enlace:         "/ventas/pedidos/" + id,
+			})
+			if err != nil {
+				log.Error().Err(err).Str("pedido", id).Msg("failed to create order status notification")
+			}
+		}()
 	}
 
 	return s.GetPedido(ctx, userID, id)

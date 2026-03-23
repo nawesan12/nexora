@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 import { useGastos, useDeleteGasto } from "@/hooks/queries/use-finance";
-import type { Gasto } from "@nexora/shared/types";
+import type { Gasto } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable, DataTableColumnHeader, DataTableRowActions, type RowAction } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ const categoriaLabels: Record<string, string> = {
 
 const CATEGORIA_GASTO_COLORS: Record<string, string> = {
   SERVICIOS: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400",
-  ALQUILER: "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
+  ALQUILER: "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",
   SUELDOS: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
   IMPUESTOS: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
   INSUMOS: "bg-cyan-100 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-400",

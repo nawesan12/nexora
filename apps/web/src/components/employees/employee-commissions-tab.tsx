@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { comisionesApi } from "@/lib/finance";
-import type { ConfiguracionComision, ComisionVendedor } from "@nexora/shared/types";
+import type { ConfiguracionComision, ComisionVendedor } from "@pronto/shared/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

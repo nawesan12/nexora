@@ -2,11 +2,11 @@ import { api } from "@/lib/api-client";
 import type {
   ComprobanteList,
   ComprobanteDetail,
-} from "@nexora/shared/types";
+} from "@pronto/shared/types";
 import type {
   CreateFromPedidoInput,
   CreateManualComprobanteInput,
-} from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
 
 interface ListFacturasParams {
   page?: number;
@@ -37,4 +37,21 @@ export const facturasApi = {
   void: (id: string) =>
     api.patch<ComprobanteDetail>(`/api/v1/facturas/${id}/anular`),
   delete: (id: string) => api.del(`/api/v1/facturas/${id}`),
+  downloadPdf: async (id: string, formato?: "ticket") => {
+    const params = formato ? `?formato=${formato}` : "";
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/facturas/${id}/pdf${params}`,
+      { credentials: "include" },
+    );
+    if (!res.ok) throw new Error("Error al descargar PDF");
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `factura-${id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };

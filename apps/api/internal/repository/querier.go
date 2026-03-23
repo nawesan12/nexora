@@ -352,6 +352,43 @@ type Querier interface {
 	UpdateZona(ctx context.Context, arg UpdateZonaParams) (Zona, error)
 	UpsertCatalogoProducto(ctx context.Context, arg UpsertCatalogoProductoParams) (CatalogoProducto, error)
 	UpsertPermissionOverride(ctx context.Context, arg UpsertPermissionOverrideParams) (PermissionOverride, error)
+	// Facturas Proveedor
+	CreateFacturaProveedor(ctx context.Context, arg CreateFacturaProveedorParams) (FacturaProveedor, error)
+	CreateDetalleFacturaProveedor(ctx context.Context, arg CreateDetalleFacturaProveedorParams) (DetalleFacturaProveedor, error)
+	GetFacturaProveedorByID(ctx context.Context, arg GetFacturaProveedorByIDParams) (GetFacturaProveedorByIDRow, error)
+	ListFacturasProveedor(ctx context.Context, arg ListFacturasProveedorParams) ([]ListFacturasProveedorRow, error)
+	CountFacturasProveedor(ctx context.Context, usuarioID pgtype.UUID) (int64, error)
+	UpdateFacturaProveedorEstado(ctx context.Context, arg UpdateFacturaProveedorEstadoParams) error
+	SoftDeleteFacturaProveedor(ctx context.Context, arg SoftDeleteFacturaProveedorParams) error
+	ListDetallesByFacturaProveedor(ctx context.Context, facturaID pgtype.UUID) ([]DetalleFacturaProveedor, error)
+	// Devoluciones Proveedor
+	CreateDevolucionProveedor(ctx context.Context, arg CreateDevolucionProveedorParams) (DevolucionProveedor, error)
+	CreateDetalleDevolucionProveedor(ctx context.Context, arg CreateDetalleDevolucionProveedorParams) (DetalleDevolucionProveedor, error)
+	GetDevolucionProveedorByID(ctx context.Context, arg GetDevolucionProveedorByIDParams) (GetDevolucionProveedorByIDRow, error)
+	ListDevolucionesProveedor(ctx context.Context, arg ListDevolucionesProveedorParams) ([]ListDevolucionesProveedorRow, error)
+	CountDevolucionesProveedor(ctx context.Context, usuarioID pgtype.UUID) (int64, error)
+	UpdateDevolucionProveedorEstado(ctx context.Context, arg UpdateDevolucionProveedorEstadoParams) error
+	SoftDeleteDevolucionProveedor(ctx context.Context, arg SoftDeleteDevolucionProveedorParams) error
+	ListDetallesByDevolucionProveedor(ctx context.Context, devolucionID pgtype.UUID) ([]ListDetallesDevolucionProveedorRow, error)
+	GetNextDevolucionProveedorNumero(ctx context.Context) (int64, error)
+	// Visitas Cliente
+	CreateVisitaCliente(ctx context.Context, arg CreateVisitaClienteParams) (VisitaCliente, error)
+	GetVisitaByID(ctx context.Context, arg GetVisitaByIDParams) (GetVisitaByIDRow, error)
+	ListVisitas(ctx context.Context, arg ListVisitasParams) ([]ListVisitasRow, error)
+	CountVisitas(ctx context.Context, arg CountVisitasParams) (int64, error)
+	ListVisitasByVendedorHoy(ctx context.Context, arg ListVisitasByVendedorHoyParams) ([]ListVisitasByVendedorHoyRow, error)
+	UpdateVisitaCliente(ctx context.Context, arg UpdateVisitaClienteParams) (VisitaCliente, error)
+	SoftDeleteVisitaCliente(ctx context.Context, arg SoftDeleteVisitaClienteParams) error
+	// Salidas Vendedor
+	CreateSalidaVendedor(ctx context.Context, arg CreateSalidaVendedorParams) (SalidaVendedor, error)
+	GetSalidaByID(ctx context.Context, arg GetSalidaByIDParams) (GetSalidaByIDRow, error)
+	ListSalidasByFecha(ctx context.Context, arg ListSalidasByFechaParams) ([]ListSalidasByFechaRow, error)
+	CountSalidasByFecha(ctx context.Context, arg CountSalidasByFechaParams) (int64, error)
+	ListSalidasByEmpleado(ctx context.Context, arg ListSalidasByEmpleadoParams) ([]ListSalidasByFechaRow, error)
+	CountSalidasByEmpleado(ctx context.Context, arg CountSalidasByEmpleadoParams) (int64, error)
+	UpdateSalidaRegreso(ctx context.Context, arg UpdateSalidaRegresoParams) (SalidaVendedor, error)
+	UpdateSalidaEstado(ctx context.Context, arg UpdateSalidaEstadoParams) (SalidaVendedor, error)
+	SoftDeleteSalida(ctx context.Context, arg SoftDeleteSalidaParams) error
 }
 
 var _ Querier = (*Queries)(nil)

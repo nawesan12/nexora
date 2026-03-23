@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   useCliente,
   useUpdateCliente,
@@ -12,10 +13,11 @@ import {
   useDeleteDireccion,
   useSetDireccionPrincipal,
 } from "@/hooks/queries/use-clients";
+import { api } from "@/lib/api-client";
 import { ClientForm } from "@/components/clients/client-form";
 import { AddressDialog } from "@/components/clients/address-dialog";
-import type { ClienteInput, DireccionInput } from "@nexora/shared/schemas";
-import type { Direccion } from "@nexora/shared/types";
+import type { ClienteInput, DireccionInput } from "@pronto/shared/schemas";
+import type { Direccion } from "@pronto/shared/types";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +55,10 @@ import {
   Trash2,
   MapPin,
   Loader2,
+  DollarSign,
+  CreditCard,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 
 const REPUTACION_COLORS: Record<string, string> = {
@@ -56,7 +70,7 @@ const REPUTACION_COLORS: Record<string, string> = {
 };
 
 const IVA_COLORS: Record<string, string> = {
-  RESPONSABLE_INSCRIPTO: "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
+  RESPONSABLE_INSCRIPTO: "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",
   MONOTRIBUTO: "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400",
   EXENTO: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
   NO_RESPONSABLE: "bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400",
@@ -79,8 +93,57 @@ const condicionIvaLabels: Record<string, string> = {
   CONSUMIDOR_FINAL: "Cons. Final",
 };
 
+// --- Finance types & helpers ---
+
+interface ClienteSaldo {
+  saldo_deudor: number;
+  limite_credito: number;
+}
+
+interface ComprobanteConDeuda {
+  id: string;
+  numero: string;
+  tipo: string;
+  fecha: string;
+  total: number;
+  pagado: number;
+  pendiente: number;
+  estado: string;
+}
+
+interface PagoReciente {
+  id: string;
+  fecha: string;
+  tipo: string;
+  monto: number;
+  estado: string;
+}
+
+const ESTADO_DEUDA_COLORS: Record<string, string> = {
+  PENDIENTE: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
+  PARCIAL: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400",
+  PAGADA: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
+  VENCIDA: "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
+};
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+  }).format(value);
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 export default function ClienteDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const user = useUserStore((s) => s.user);
   const permissions = user?.permissions ?? [];
   const canManage = hasPermission(permissions, "clients:manage");
@@ -92,6 +155,31 @@ export default function ClienteDetailPage() {
   const updateDireccionMutation = useUpdateDireccion();
   const deleteDireccionMutation = useDeleteDireccion();
   const setPrincipalMutation = useSetDireccionPrincipal();
+
+  // Finance queries (inline, as requested)
+  const { data: saldo, isLoading: saldoLoading } = useQuery<ClienteSaldo>({
+    queryKey: ["clientes", id, "saldo"],
+    queryFn: () => api.get<ClienteSaldo>(`/api/v1/clientes/${id}/saldo`),
+    enabled: !!id,
+  });
+
+  const { data: comprobantesDeuda, isLoading: deudaLoading } = useQuery<ComprobanteConDeuda[]>({
+    queryKey: ["clientes", id, "comprobantes-deuda"],
+    queryFn: () =>
+      api.get<ComprobanteConDeuda[]>(
+        `/api/v1/finanzas/cobros/comprobantes-con-deuda?cliente_id=${id}`,
+      ),
+    enabled: !!id,
+  });
+
+  const { data: pagosRecientes } = useQuery<PagoReciente[]>({
+    queryKey: ["clientes", id, "pagos-recientes"],
+    queryFn: () =>
+      api.get<PagoReciente[]>(
+        `/api/v1/finanzas/cobros?cliente_id=${id}&page=1&pageSize=5`,
+      ),
+    enabled: !!id,
+  });
 
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Direccion | null>(null);
@@ -184,6 +272,7 @@ export default function ClienteDetailPage() {
         <TabsList>
           <TabsTrigger value="datos">Datos</TabsTrigger>
           <TabsTrigger value="direcciones">Direcciones</TabsTrigger>
+          <TabsTrigger value="finanzas">Finanzas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="datos" className="mt-4">
@@ -312,6 +401,208 @@ export default function ClienteDetailPage() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="finanzas" className="mt-4 space-y-5">
+          {/* Balance cards */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardDescription className="flex items-center gap-1.5">
+                  <DollarSign className="h-4 w-4" />
+                  Saldo Deudor
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {saldoLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <p
+                    className={`text-2xl font-bold tracking-tight ${
+                      (saldo?.saldo_deudor ?? 0) > 0
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-foreground"
+                    }`}
+                  >
+                    {formatCurrency(saldo?.saldo_deudor ?? 0)}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardDescription className="flex items-center gap-1.5">
+                    <CreditCard className="h-4 w-4" />
+                    Limite de Credito
+                  </CardDescription>
+                  {canManage && (
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {saldoLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <p className="text-2xl font-bold tracking-tight">
+                    {formatCurrency(saldo?.limite_credito ?? 0)}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick action */}
+          <div className="flex justify-end">
+            <Button
+              onClick={() =>
+                router.push(`/finanzas/cobros/nuevo?cliente_id=${id}`)
+              }
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Registrar Cobro
+            </Button>
+          </div>
+
+          {/* Comprobantes con deuda */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Comprobantes con deuda
+              </CardTitle>
+              <CardDescription>
+                Comprobantes pendientes de pago para este cliente
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {deudaLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : !comprobantesDeuda || comprobantesDeuda.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted mb-3">
+                    <FileText className="h-7 w-7" />
+                  </div>
+                  <p className="text-base font-medium">Sin comprobantes con deuda</p>
+                  <p className="text-sm mt-1">Este cliente no tiene saldos pendientes</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Numero</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-right">Pagado</TableHead>
+                        <TableHead className="text-right">Pendiente</TableHead>
+                        <TableHead>Estado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {comprobantesDeuda.map((comp) => (
+                        <TableRow key={comp.id}>
+                          <TableCell className="font-medium">
+                            {comp.numero}
+                          </TableCell>
+                          <TableCell>{comp.tipo}</TableCell>
+                          <TableCell>{formatDate(comp.fecha)}</TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(comp.total)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(comp.pagado)}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(comp.pendiente)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="secondary"
+                              className={`text-xs font-medium border-0 ${
+                                ESTADO_DEUDA_COLORS[comp.estado] || ""
+                              }`}
+                            >
+                              {comp.estado}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent payments */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Pagos recientes</CardTitle>
+                  <CardDescription>
+                    Ultimos cobros registrados para este cliente
+                  </CardDescription>
+                </div>
+                <Link
+                  href={`/finanzas/cobros?cliente_id=${id}`}
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                >
+                  Ver todos
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {!pagosRecientes || pagosRecientes.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No hay pagos registrados
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {pagosRecientes.map((pago) => (
+                    <div
+                      key={pago.id}
+                      className="flex items-center justify-between rounded-lg border border-border/50 p-3 transition-colors hover:bg-muted/30"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                          <DollarSign className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{pago.tipo}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(pago.fecha)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold">
+                          {formatCurrency(pago.monto)}
+                        </span>
+                        <Badge
+                          variant="secondary"
+                          className={`text-xs font-medium border-0 ${
+                            ESTADO_DEUDA_COLORS[pago.estado] || ""
+                          }`}
+                        >
+                          {pago.estado}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>

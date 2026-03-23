@@ -94,7 +94,7 @@ async function request<T>(
 async function requestWithMeta<T>(
   path: string,
   options: RequestInit = {},
-): Promise<{ data: T; meta: import("@nexora/shared/types").Meta }> {
+): Promise<{ data: T; meta: import("@pronto/shared/types").Meta }> {
   const url = `${API_URL}${path}`;
   const res = await fetch(url, {
     ...options,

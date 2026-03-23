@@ -21,6 +21,10 @@ import {
   Building2,
   ClipboardList,
   ShieldCheck,
+  Navigation,
+  PackageMinus,
+  TrendingUp,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 
@@ -69,6 +73,36 @@ export const navigation: NavSection[] = [
         icon: Users,
         permission: "clients:view",
       },
+      {
+        title: "Mapa Vendedores",
+        href: "/ventas/vendedor/mapa",
+        icon: MapPin,
+        permission: "orders:view",
+      },
+      {
+        title: "Mi Dia",
+        href: "/ventas/vendedor/calle",
+        icon: Navigation,
+        permission: "orders:create",
+      },
+      {
+        title: "Visitas",
+        href: "/ventas/vendedor/visitas",
+        icon: MapPin,
+        permission: "clients:view",
+      },
+      {
+        title: "KPIs Ventas",
+        href: "/ventas/kpis",
+        icon: TrendingUp,
+        permission: "reports:view",
+      },
+      {
+        title: "Fidelidad",
+        href: "/ventas/clientes/fidelidad",
+        icon: Star,
+        permission: "clients:view",
+      },
     ],
   },
   {
@@ -84,6 +118,18 @@ export const navigation: NavSection[] = [
         title: "Ordenes de Compra",
         href: "/compras/ordenes",
         icon: ClipboardList,
+        permission: "purchases:view",
+      },
+      {
+        title: "Facturas Prov.",
+        href: "/compras/facturas",
+        icon: FileText,
+        permission: "purchases:view",
+      },
+      {
+        title: "Devoluciones Prov.",
+        href: "/compras/devoluciones",
+        icon: PackageMinus,
         permission: "purchases:view",
       },
     ],
@@ -115,11 +161,23 @@ export const navigation: NavSection[] = [
         icon: ArrowLeftRight,
         permission: "stock:view",
       },
+      {
+        title: "Devoluciones",
+        href: "/inventario/devoluciones",
+        icon: PackageMinus,
+        permission: "stock:adjust",
+      },
     ],
   },
   {
     title: "Logistica",
     items: [
+      {
+        title: "Deposito",
+        href: "/logistica/deposito",
+        icon: Warehouse,
+        permission: "orders:view",
+      },
       {
         title: "Repartos",
         href: "/logistica/repartos",
@@ -167,6 +225,36 @@ export const navigation: NavSection[] = [
         icon: Wallet,
         permission: "finance:view",
       },
+      {
+        title: "Cobros",
+        href: "/finanzas/cobros",
+        icon: Receipt,
+        permission: "finance:view",
+      },
+      {
+        title: "Estado de Cuenta",
+        href: "/finanzas/estado-cuenta",
+        icon: FileText,
+        permission: "finance:view",
+      },
+      {
+        title: "Cuentas Bancarias",
+        href: "/finanzas/cuentas-bancarias",
+        icon: Landmark,
+        permission: "finance:view",
+      },
+      {
+        title: "Indices Financieros",
+        href: "/finanzas/indices",
+        icon: BarChart3,
+        permission: "finance:reports",
+      },
+      {
+        title: "Retenciones",
+        href: "/finanzas/retenciones",
+        icon: Receipt,
+        permission: "finance:view",
+      },
     ],
   },
   {
@@ -183,6 +271,12 @@ export const navigation: NavSection[] = [
         href: "/reportes",
         icon: BarChart3,
         permission: "reports:view",
+      },
+      {
+        title: "Salidas",
+        href: "/administracion/supervision/salidas",
+        icon: MapPin,
+        permission: "employees:view",
       },
     ],
   },
@@ -218,6 +312,12 @@ export const navigation: NavSection[] = [
         href: "/configuracion/permisos",
         icon: Settings,
         permission: "settings:manage",
+      },
+      {
+        title: "Conversiones",
+        href: "/configuracion/conversiones",
+        icon: ArrowLeftRight,
+        permission: "settings:view",
       },
     ],
   },

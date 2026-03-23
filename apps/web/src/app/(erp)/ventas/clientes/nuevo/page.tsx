@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCreateCliente } from "@/hooks/queries/use-clients";
 import { ClientForm } from "@/components/clients/client-form";
-import type { ClienteInput } from "@nexora/shared/schemas";
+import type { ClienteInput } from "@pronto/shared/schemas";
 import {
   Card,
   CardContent,

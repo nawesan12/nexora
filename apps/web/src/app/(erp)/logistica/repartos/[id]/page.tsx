@@ -16,8 +16,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   eventoRepartoSchema,
   type EventoRepartoInput,
-} from "@nexora/shared/schemas";
-import type { EventoReparto, RepartoPedido } from "@nexora/shared/types";
+} from "@pronto/shared/schemas";
+import type { EventoReparto, RepartoPedido } from "@pronto/shared/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,6 +66,7 @@ import {
   Square,
   XCircle,
 } from "lucide-react";
+import { SignatureCapture } from "@/components/signature-pad";
 import gsap from "gsap";
 
 const ESTADO_REPARTO_LABELS: Record<string, string> = {
@@ -104,12 +105,12 @@ const EVENTO_TIPO_COLORS: Record<string, string> = {
   ENTREGA_PARCIAL:
     "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
   COBRO:
-    "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
+    "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",
 };
 
 const PEDIDO_ESTADO_COLORS: Record<string, string> = {
   EN_REPARTO:
-    "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400",
+    "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-teal-400",
   ENTREGADO:
     "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400",
   NO_ENTREGADO:
@@ -147,6 +148,7 @@ export default function RepartoDetailPage({
   const [showTransitionDialog, setShowTransitionDialog] = useState<string | null>(null);
   const [kmInicio, setKmInicio] = useState("");
   const [kmFin, setKmFin] = useState("");
+  const [eventoFirmaUrl, setEventoFirmaUrl] = useState<string | null>(null);
 
   const eventoForm = useForm<EventoRepartoInput>({
     resolver: zodResolver(eventoRepartoSchema),
@@ -225,17 +227,21 @@ export default function RepartoDetailPage({
   };
 
   const handleCreateEvento = (data: EventoRepartoInput) => {
-    const payload = {
+    const payload: Record<string, unknown> = {
       ...data,
       pedido_id: data.pedido_id || undefined,
       comentario: data.comentario || undefined,
       monto_cobrado: data.monto_cobrado || undefined,
     };
+    if (eventoFirmaUrl) {
+      payload.firma_url = eventoFirmaUrl;
+    }
     createEventoMutation.mutate(
-      { repartoId: id, data: payload },
+      { repartoId: id, data: payload as EventoRepartoInput },
       {
         onSuccess: () => {
           setShowEventDialog(false);
+          setEventoFirmaUrl(null);
           eventoForm.reset();
         },
       },
@@ -393,8 +399,8 @@ export default function RepartoDetailPage({
         <Card className="detail-card border-0 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-950/50">
-                <MapPin className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-950/50">
+                <MapPin className="h-5 w-5 text-teal-600 dark:text-teal-400" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -587,7 +593,7 @@ export default function RepartoDetailPage({
                           : evento.tipo === "NO_ENTREGA"
                             ? "bg-red-500"
                             : evento.tipo === "COBRO"
-                              ? "bg-violet-500"
+                              ? "bg-amber-500"
                               : "bg-blue-500"
                       }`}
                     />
@@ -806,12 +812,43 @@ export default function RepartoDetailPage({
                 />
               )}
 
+              {(eventoTipo === "ENTREGA" || eventoTipo === "ENTREGA_PARCIAL") && (
+                <div className="space-y-2">
+                  {eventoFirmaUrl ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Firma capturada</p>
+                      <div className="rounded-lg border bg-white p-2">
+                        <img src={eventoFirmaUrl} alt="Firma" className="mx-auto h-24 object-contain" />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setEventoFirmaUrl(null)}
+                      >
+                        Cambiar firma
+                      </Button>
+                    </div>
+                  ) : (
+                    <SignatureCapture
+                      title="Firma del receptor (opcional)"
+                      onSave={(dataUrl) => setEventoFirmaUrl(dataUrl)}
+                      width={400}
+                      height={150}
+                      className="border shadow-none"
+                    />
+                  )}
+                </div>
+              )}
+
               <DialogFooter>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
                     setShowEventDialog(false);
+                    setEventoFirmaUrl(null);
                     eventoForm.reset();
                   }}
                 >

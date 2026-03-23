@@ -46,6 +46,9 @@ export const Permission = {
   PURCHASES_CREATE: "purchases:create",
   PURCHASES_APPROVE: "purchases:approve",
   PURCHASES_CANCEL: "purchases:cancel",
+  // Administration
+  SALES_TARGETS_MANAGE: "sales_targets:manage",
+  PROMOTIONS_MANAGE: "promotions:manage",
   // System
   SETTINGS_VIEW: "settings:view",
   SETTINGS_MANAGE: "settings:manage",
@@ -141,6 +144,13 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     ],
   },
   {
+    label: "Administración",
+    permissions: [
+      { value: "sales_targets:manage", label: "Gestionar metas de venta" },
+      { value: "promotions:manage", label: "Gestionar promociones" },
+    ],
+  },
+  {
     label: "Sistema",
     permissions: [
       { value: "settings:view", label: "Ver configuración" },
@@ -168,6 +178,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Rol, Permission[]> = {
     "finance:view", "finance:cash_register", "finance:expenses", "finance:checks", "finance:budgets", "finance:reports",
     "delivery:view", "delivery:manage",
     "suppliers:view", "suppliers:manage", "purchases:view", "purchases:create", "purchases:approve", "purchases:cancel",
+    "sales_targets:manage", "promotions:manage",
     "settings:view",
     "reports:view", "reports:export",
   ],

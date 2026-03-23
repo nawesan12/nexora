@@ -8,7 +8,7 @@ import {
   ROLES,
   type Rol,
   type Permission,
-} from "@nexora/shared/constants";
+} from "@pronto/shared/constants";
 import {
   useRolesPermissions,
   useUpdateRolePermissions,
@@ -150,7 +150,7 @@ export default function PermisosPage() {
 
       {/* Permission matrix */}
       <Card className="border-0 shadow-sm overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-primary to-violet-500" />
+        <div className="h-1 bg-gradient-to-r from-primary to-amber-500" />
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

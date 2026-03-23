@@ -1,5 +1,5 @@
 {
-  "extends": "@nexora/config/typescript/base",
+  "extends": "@pronto/config/typescript/base",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist"

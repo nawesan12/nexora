@@ -40,7 +40,7 @@ const settingsCards = [
     description: "Gestiona cuentas y entidades bancarias",
     href: "/configuracion/entidades-bancarias",
     icon: Landmark,
-    color: "text-violet-600 bg-violet-100 dark:text-violet-400 dark:bg-violet-950/50",
+    color: "text-teal-600 bg-teal-100 dark:text-teal-400 dark:bg-teal-950/50",
   },
   {
     title: "Permisos",

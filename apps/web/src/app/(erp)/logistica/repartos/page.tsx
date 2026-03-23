@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useRepartos, useDeleteReparto } from "@/hooks/queries/use-logistics";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import type { RepartoList } from "@nexora/shared/types";
+import type { RepartoList } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,
@@ -303,7 +303,7 @@ export default function RepartosPage() {
 
       {/* Summary bar */}
       <Card className="repartos-summary-bar border-0 shadow-sm overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-primary to-violet-500" />
+        <div className="h-1 bg-gradient-to-r from-primary to-amber-500" />
         <CardContent className="py-4">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">

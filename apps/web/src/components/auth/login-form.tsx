@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -10,8 +10,8 @@ import {
   accessCodeSchema,
   type LoginInput,
   type AccessCodeInput,
-} from "@nexora/shared/schemas";
-import { ROLE_DEFAULT_REDIRECT } from "@nexora/shared/constants";
+} from "@pronto/shared/schemas";
+import { ROLE_DEFAULT_REDIRECT } from "@pronto/shared/constants";
 import { authApi } from "@/lib/auth";
 import { useUserStore } from "@/store/user-store";
 import { ApiClientError } from "@/lib/api-client";
@@ -21,9 +21,21 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Lock, KeyRound, Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { GoogleLoginButton } from "@/components/auth/google-login-button";
+import { DemoLoginButton } from "@/components/auth/demo-login-button";
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  invalid_state: "Error de seguridad en la autenticacion. Intenta de nuevo.",
+  exchange_failed: "No se pudo completar la autenticacion con Google.",
+  userinfo_failed: "No se pudo obtener la informacion de tu cuenta de Google.",
+  decode_failed: "Error al procesar los datos de Google.",
+  auth_failed: "Error al iniciar sesion con Google.",
+  access_denied: "Acceso denegado por Google.",
+};
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setUser = useUserStore((s) => s.setUser);
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +48,19 @@ export function LoginForm() {
     resolver: zodResolver(accessCodeSchema),
     defaultValues: { access_code: "" },
   });
+
+  // Handle OAuth error query params
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      const message =
+        OAUTH_ERROR_MESSAGES[error] ||
+        "Error al iniciar sesion. Intenta de nuevo.";
+      toast.error(message);
+      // Clean up the URL
+      router.replace("/login", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   async function onEmailLogin(data: LoginInput) {
     setLoading(true);
@@ -79,6 +104,12 @@ export function LoginForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleDemoSuccess(email: string, password: string) {
+    emailForm.setValue("email", email);
+    emailForm.setValue("password", password);
+    emailForm.handleSubmit(onEmailLogin)();
   }
 
   return (
@@ -202,6 +233,24 @@ export function LoginForm() {
             </form>
           </TabsContent>
         </Tabs>
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/60" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">
+              o continuar con
+            </span>
+          </div>
+        </div>
+
+        {/* Social / Demo login */}
+        <div className="space-y-3">
+          <GoogleLoginButton />
+          <DemoLoginButton onSuccess={handleDemoSuccess} />
+        </div>
       </div>
 
       <p className="text-center text-sm text-muted-foreground">

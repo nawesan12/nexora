@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { pedidosApi, configImpuestosApi } from "@/lib/orders";
-import type { PedidoInput, TransicionEstadoInput, ConfiguracionImpuestoInput } from "@nexora/shared/schemas";
+import type { PedidoInput, TransicionEstadoInput, ConfiguracionImpuestoInput } from "@pronto/shared/schemas";
 
 // --- Pedidos ---
 

@@ -9,8 +9,8 @@ import {
 } from "@/hooks/queries/use-finance";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { metodoPagoSchema, type MetodoPagoInput } from "@nexora/shared/schemas";
-import type { MetodoPago } from "@nexora/shared/types";
+import { metodoPagoSchema, type MetodoPagoInput } from "@pronto/shared/schemas";
+import type { MetodoPago } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,

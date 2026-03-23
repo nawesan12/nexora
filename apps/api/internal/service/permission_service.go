@@ -6,8 +6,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nexora-erp/nexora/internal/permissions"
-	"github.com/nexora-erp/nexora/internal/repository"
+	"github.com/pronto-erp/pronto/internal/permissions"
+	"github.com/pronto-erp/pronto/internal/repository"
 )
 
 type PermissionService struct {

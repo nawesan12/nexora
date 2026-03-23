@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useProductos, useDeleteProducto } from "@/hooks/queries/use-products";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import type { Producto } from "@nexora/shared/types";
+import type { Producto } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,

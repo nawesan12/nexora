@@ -1,6 +1,6 @@
 import { api } from "@/lib/api-client";
-import type { AfipConfig, AfipAuthResult } from "@nexora/shared/types";
-import type { AfipConfigInput } from "@nexora/shared/schemas";
+import type { AfipConfig, AfipAuthResult } from "@pronto/shared/types";
+import type { AfipConfigInput } from "@pronto/shared/schemas";
 
 export const afipApi = {
   getConfig: (sucursalId: string) =>

@@ -62,7 +62,7 @@ export default function PresupuestoDetailPage() {
       label: "Presupuestado",
       value: formatCurrency(p.monto),
       icon: DollarSign,
-      color: "#7C3AED",
+      color: "#D97706",
     },
     {
       label: "Gastado",

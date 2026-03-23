@@ -1,0 +1,2 @@
+ALTER TABLE sucursales ADD COLUMN tipo VARCHAR(20) NOT NULL DEFAULT 'TIENDA';
+ALTER TABLE sucursales ADD CONSTRAINT chk_sucursal_tipo CHECK (tipo IN ('TIENDA', 'DEPOSITO'));

@@ -22,6 +22,7 @@ export const TIPO_COMPROBANTE_LABELS: Record<string, string> = {
 export const LETRA_COMPROBANTE_LABELS: Record<string, string> = {
   A: "A",
   B: "B",
+  C: "C",
   N: "N",
   X: "X",
 };

@@ -5,7 +5,8 @@ import type {
   InventoryReport,
   FinanceReport,
   ProductReport,
-} from "@nexora/shared/types";
+  BranchRevenueReport,
+} from "@pronto/shared/types";
 
 interface ReportParams {
   desde?: string;
@@ -41,4 +42,6 @@ export const reportsApi = {
     `/api/v1/reportes/inventario/exportar${buildParams(params)}`,
   exportFinance: (params: ReportParams = {}) =>
     `/api/v1/reportes/finanzas/exportar${buildParams(params)}`,
+  revenueByBranch: (params: ReportParams = {}) =>
+    api.get<BranchRevenueReport>(`/api/v1/reportes/sucursales${buildParams(params)}`),
 };

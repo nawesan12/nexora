@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFacturas, useEmitFactura, useVoidFactura, useDeleteFactura } from "@/hooks/queries/use-invoices";
 import { useDebounce } from "@/hooks/use-debounce";
-import type { ComprobanteList } from "@nexora/shared/types";
+import type { ComprobanteList } from "@pronto/shared/types";
 import {
   ESTADO_COMPROBANTE_LABELS,
   TIPO_COMPROBANTE_LABELS,
-} from "@nexora/shared/constants";
+} from "@pronto/shared/constants";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable, DataTableColumnHeader, DataTableRowActions, type RowAction } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";

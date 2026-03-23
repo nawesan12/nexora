@@ -8,7 +8,7 @@ import { hasPermission } from "@/lib/permissions";
 import {
   ESTADO_COMPROBANTE_LABELS,
   TIPO_COMPROBANTE_LABELS,
-} from "@nexora/shared/constants";
+} from "@pronto/shared/constants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Send, Ban, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Send, Ban, ShieldCheck, Download, Printer } from "lucide-react";
+import { facturasApi } from "@/lib/invoices";
 import gsap from "gsap";
 
 const condicionPagoLabels: Record<string, string> = {
@@ -156,6 +157,14 @@ export default function FacturaDetailPage({
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => facturasApi.downloadPdf(id)}>
+              <Download className="mr-2 h-4 w-4" />
+              Descargar PDF
+            </Button>
+            <Button variant="outline" onClick={() => facturasApi.downloadPdf(id, "ticket")}>
+              <Printer className="mr-2 h-4 w-4" />
+              Ticket
+            </Button>
             {factura.estado === "BORRADOR" && canCreate && (
               <Button onClick={() => emitMutation.mutate(id)} disabled={emitMutation.isPending}>
                 <Send className="mr-2 h-4 w-4" />

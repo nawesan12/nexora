@@ -9,8 +9,8 @@ import {
 } from "@/hooks/queries/use-branches";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { sucursalSchema, type SucursalInput } from "@nexora/shared/schemas";
-import type { Branch } from "@nexora/shared/types";
+import { sucursalSchema, type SucursalInput } from "@pronto/shared/schemas";
+import type { Branch } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,

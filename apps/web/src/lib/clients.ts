@@ -1,6 +1,6 @@
 import { api } from "@/lib/api-client";
-import type { Cliente, Direccion } from "@nexora/shared/types";
-import type { ClienteInput, DireccionInput } from "@nexora/shared/schemas";
+import type { Cliente, Direccion } from "@pronto/shared/types";
+import type { ClienteInput, DireccionInput } from "@pronto/shared/schemas";
 
 interface ListClientesParams {
   page?: number;

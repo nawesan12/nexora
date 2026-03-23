@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/nexora-erp/nexora/internal/middleware"
-	"github.com/nexora-erp/nexora/internal/pkg/response"
-	"github.com/nexora-erp/nexora/internal/service"
+	"github.com/pronto-erp/pronto/internal/middleware"
+	"github.com/pronto-erp/pronto/internal/pkg/response"
+	"github.com/pronto-erp/pronto/internal/service"
 )
 
 type PermissionHandler struct {

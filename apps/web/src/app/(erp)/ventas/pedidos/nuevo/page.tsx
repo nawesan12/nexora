@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCreatePedido } from "@/hooks/queries/use-orders";
 import { OrderForm } from "@/components/orders/order-form";
-import type { PedidoInput } from "@nexora/shared/schemas";
+import type { PedidoInput } from "@pronto/shared/schemas";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import gsap from "gsap";
 

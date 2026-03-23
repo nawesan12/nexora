@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { chequeSchema, type ChequeInput } from "@nexora/shared/schemas";
+import { chequeSchema, type ChequeInput } from "@pronto/shared/schemas";
 import { useCreateCheque } from "@/hooks/queries/use-finance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

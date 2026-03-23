@@ -1,15 +1,15 @@
 import { api } from "@/lib/api-client";
 import type {
-  Caja, MovimientoCaja, ArqueoCaja, Cheque, EntidadBancaria,
+  Caja, MovimientoCaja, MovimientoCajaWithCaja, ArqueoCaja, Cheque, EntidadBancaria,
   MetodoPago, Gasto, GastoRecurrente, Presupuesto,
   ConfiguracionComision, ComisionVendedor, FinanceResumen,
-} from "@nexora/shared/types";
+} from "@pronto/shared/types";
 import type {
   CajaInput, MovimientoInput, ArqueoInput, ChequeInput,
   TransicionChequeInput, GastoInput, GastoRecurrenteInput,
   MetodoPagoInput, PresupuestoInput, ConfiguracionComisionInput,
   EntidadBancariaInput,
-} from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
 
 // --- Cajas ---
 
@@ -303,6 +303,29 @@ export const entidadesBancariasApi = {
     ),
   delete: (id: string) =>
     api.del(`/api/v1/finanzas/entidades-bancarias/${id}`),
+};
+
+// --- Movimientos (all cajas) ---
+
+interface ListAllMovimientosParams {
+  page?: number;
+  pageSize?: number;
+  tipo?: string;
+}
+
+export const allMovimientosApi = {
+  listAll: ({ page = 1, pageSize = 20, tipo }: ListAllMovimientosParams = {}) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+    });
+    if (tipo) params.set("tipo", tipo);
+    return api.getWithMeta<MovimientoCajaWithCaja[]>(
+      `/api/v1/finanzas/movimientos?${params}`,
+    );
+  },
+  create: (data: MovimientoInput) =>
+    api.post<MovimientoCajaWithCaja>("/api/v1/finanzas/movimientos", data),
 };
 
 // --- Resumen Financiero ---

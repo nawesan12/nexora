@@ -1,5 +1,5 @@
 import { api } from "@/lib/api-client";
-import type { MovimientoStock, Meta } from "@nexora/shared/types";
+import type { MovimientoStock, Meta } from "@pronto/shared/types";
 
 interface ListMovimientosParams {
   page?: number;

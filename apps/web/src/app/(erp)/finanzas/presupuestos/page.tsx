@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePresupuestos, useDeletePresupuesto } from "@/hooks/queries/use-finance";
-import type { Presupuesto } from "@nexora/shared/types";
+import type { Presupuesto } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable, DataTableColumnHeader, DataTableRowActions, type RowAction } from "@/components/data-table";
 import { Button } from "@/components/ui/button";

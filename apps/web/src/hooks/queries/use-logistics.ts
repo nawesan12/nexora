@@ -11,6 +11,14 @@ import {
 
 // --- Vehiculos ---
 
+export function useVehiculo(id: string) {
+  return useQuery({
+    queryKey: ["vehiculos", id],
+    queryFn: () => vehiculosApi.get(id),
+    enabled: !!id,
+  });
+}
+
 export function useVehiculos({
   page = 1,
   pageSize = 50,

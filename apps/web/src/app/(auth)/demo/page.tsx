@@ -10,7 +10,7 @@ export default function DemoPage() {
           Demo
         </h1>
         <p className="text-sm text-muted-foreground">
-          Explora Nexora sin necesidad de crear una cuenta
+          Explora Pronto sin necesidad de crear una cuenta
         </p>
       </div>
 

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { usePedido, useUpdatePedido } from "@/hooks/queries/use-orders";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import { ORDER_STATUS_LABELS, type Rol } from "@nexora/shared/constants";
+import { ORDER_STATUS_LABELS, type Rol } from "@pronto/shared/constants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

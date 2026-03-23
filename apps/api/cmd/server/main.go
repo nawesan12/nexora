@@ -9,13 +9,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/nexora-erp/nexora/internal/cache"
-	"github.com/nexora-erp/nexora/internal/config"
-	"github.com/nexora-erp/nexora/internal/database"
 	"github.com/hibiken/asynq"
-	jwtpkg "github.com/nexora-erp/nexora/internal/pkg/jwt"
-	"github.com/nexora-erp/nexora/internal/server"
-	"github.com/nexora-erp/nexora/internal/worker"
+	"github.com/pronto-erp/pronto/internal/cache"
+	"github.com/pronto-erp/pronto/internal/config"
+	"github.com/pronto-erp/pronto/internal/database"
+	"github.com/pronto-erp/pronto/internal/email"
+	jwtpkg "github.com/pronto-erp/pronto/internal/pkg/jwt"
+	"github.com/pronto-erp/pronto/internal/server"
+	"github.com/pronto-erp/pronto/internal/worker"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -66,7 +67,24 @@ func main() {
 
 	jwtMgr := jwtpkg.NewManager(cfg.JWTSecret, refreshSecret, accessExpiry, refreshExpiry)
 
-	srv := server.New(cfg, db, rdb, jwtMgr)
+	// Asynq client for enqueuing tasks
+	redisOpt, err := asynq.ParseRedisURI(cfg.RedisURL)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to parse redis URL for asynq client")
+	}
+	asynqClient := asynq.NewClient(redisOpt)
+	defer asynqClient.Close()
+
+	// Email sender (optional — gracefully degrades if not configured)
+	var emailSender *email.Sender
+	if cfg.ResendAPIKey != "" {
+		emailSender = email.NewSender(cfg.ResendAPIKey, cfg.EmailFrom)
+		log.Info().Msg("email sending enabled via Resend")
+	} else {
+		log.Warn().Msg("RESEND_API_KEY not set — email sending disabled")
+	}
+
+	srv := server.New(cfg, db, rdb, jwtMgr, asynqClient)
 
 	// Start WebSocket hub
 	go srv.Hub().Run()
@@ -74,7 +92,8 @@ func main() {
 	// Start Asynq worker
 	asynqSrv := worker.NewProcessor(cfg.RedisURL)
 	mux := asynq.NewServeMux()
-	worker.RegisterHandlers(mux)
+	emailWorker := worker.NewEmailWorker(emailSender)
+	worker.RegisterHandlers(mux, emailWorker)
 	go func() {
 		if err := asynqSrv.Run(mux); err != nil {
 			log.Error().Err(err).Msg("asynq worker stopped")

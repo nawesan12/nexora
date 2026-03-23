@@ -36,7 +36,7 @@ sqlc:
 
 # Docker build
 docker:
-	docker build -t nexora-api .
+	docker build -t pronto-api .
 
 # Clean build artifacts
 clean:

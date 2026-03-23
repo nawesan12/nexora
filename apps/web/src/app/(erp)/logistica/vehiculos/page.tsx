@@ -9,8 +9,8 @@ import {
 } from "@/hooks/queries/use-logistics";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { vehiculoSchema, type VehiculoInput } from "@nexora/shared/schemas";
-import type { Vehiculo } from "@nexora/shared/types";
+import { vehiculoSchema, type VehiculoInput } from "@pronto/shared/schemas";
+import type { Vehiculo } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,

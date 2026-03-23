@@ -9,8 +9,8 @@ import {
 } from "@/hooks/queries/use-finance";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { entidadBancariaSchema, type EntidadBancariaInput } from "@nexora/shared/schemas";
-import type { EntidadBancaria } from "@nexora/shared/types";
+import { entidadBancariaSchema, type EntidadBancariaInput } from "@pronto/shared/schemas";
+import type { EntidadBancaria } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,

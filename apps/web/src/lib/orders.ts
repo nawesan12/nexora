@@ -4,12 +4,12 @@ import type {
   PedidoDetail,
   HistorialPedido,
   ConfiguracionImpuesto,
-} from "@nexora/shared/types";
+} from "@pronto/shared/types";
 import type {
   PedidoInput,
   TransicionEstadoInput,
   ConfiguracionImpuestoInput,
-} from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
 
 interface ListPedidosParams {
   page?: number;

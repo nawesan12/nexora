@@ -13,7 +13,7 @@ import type {
   CategoriaProductoInput,
   ProductoInput,
   CatalogoProductoInput,
-} from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
 
 // --- Familias ---
 

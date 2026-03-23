@@ -19,7 +19,7 @@ const TIPO_LABELS: Record<string, string> = {
   OTRO: "Otro",
 };
 
-import type { ImpuestoItemInput } from "@nexora/shared/schemas";
+import type { ImpuestoItemInput } from "@pronto/shared/schemas";
 
 type TaxItem = ImpuestoItemInput;
 

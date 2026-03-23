@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authApi } from "@/lib/auth";
 import { useUserStore } from "@/store/user-store";
-import { ROLE_DEFAULT_REDIRECT } from "@nexora/shared/constants";
+import { ROLE_DEFAULT_REDIRECT } from "@pronto/shared/constants";
 import { ApiClientError } from "@/lib/api-client";
-import type { Rol } from "@nexora/shared/constants";
+import type { Rol } from "@pronto/shared/constants";
 
 export function useCurrentUser() {
   const setUser = useUserStore((s) => s.setUser);

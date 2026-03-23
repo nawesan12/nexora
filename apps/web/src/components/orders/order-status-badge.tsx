@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { ORDER_STATUS_LABELS } from "@nexora/shared/constants";
+import { ORDER_STATUS_LABELS } from "@pronto/shared/constants";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDIENTE_APROBACION: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
@@ -9,8 +9,8 @@ const STATUS_COLORS: Record<string, string> = {
   APROBADO: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
   APROBADO_REPARTIDOR: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
   RECHAZADO: "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
-  EN_CONSOLIDACION: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400",
-  EN_PREPARACION: "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
+  EN_CONSOLIDACION: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-teal-400",
+  EN_PREPARACION: "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",
   LISTO_PARA_ENVIO: "bg-cyan-100 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-400",
   ENVIADO: "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400",
   ENTREGADO: "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400",

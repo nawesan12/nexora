@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { pedidoSchema, type PedidoInput } from "@nexora/shared/schemas";
+import { pedidoSchema, type PedidoInput } from "@pronto/shared/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +33,7 @@ import { useUserStore } from "@/store/user-store";
 import { OrderItemRow } from "./order-item-row";
 import { OrderTaxSection } from "./order-tax-section";
 import { OrderSummary } from "./order-summary";
-import type { PedidoDetail } from "@nexora/shared/types";
+import type { PedidoDetail } from "@pronto/shared/types";
 
 const CONDICION_PAGO_LABELS: Record<string, string> = {
   CONTADO: "Contado",
@@ -52,7 +52,7 @@ interface ItemState {
   descuento_porcentaje: number;
 }
 
-import type { ImpuestoItemInput } from "@nexora/shared/schemas";
+import type { ImpuestoItemInput } from "@pronto/shared/schemas";
 
 type TaxState = ImpuestoItemInput;
 

@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { branchesApi } from "@/lib/branches";
-import type { SucursalInput } from "@nexora/shared/schemas";
+import type { SucursalInput } from "@pronto/shared/schemas";
 
 export function useBranches() {
   return useQuery({

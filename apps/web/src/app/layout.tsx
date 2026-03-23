@@ -14,8 +14,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexora ERP",
-  description: "Operations, simplified.",
+  title: "Pronto ERP",
+  description: "Tu negocio, al instante.",
 };
 
 export default function RootLayout({

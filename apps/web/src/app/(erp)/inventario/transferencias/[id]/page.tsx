@@ -8,7 +8,7 @@ import {
 } from "@/hooks/queries/use-transfers";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import type { ItemTransferencia } from "@nexora/shared/types";
+import type { ItemTransferencia } from "@pronto/shared/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

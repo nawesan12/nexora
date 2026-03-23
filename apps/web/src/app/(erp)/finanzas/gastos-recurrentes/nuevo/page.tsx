@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { gastoRecurrenteSchema, type GastoRecurrenteInput } from "@nexora/shared/schemas";
+import { gastoRecurrenteSchema, type GastoRecurrenteInput } from "@pronto/shared/schemas";
 import { useCreateGastoRecurrente } from "@/hooks/queries/use-finance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

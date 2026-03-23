@@ -1,6 +1,6 @@
 import { api } from "@/lib/api-client";
-import type { OrdenCompraList, OrdenCompraDetail } from "@nexora/shared/types";
-import type { OrdenCompraInput, ReceiveInput } from "@nexora/shared/schemas";
+import type { OrdenCompraList, OrdenCompraDetail } from "@pronto/shared/types";
+import type { OrdenCompraInput, ReceiveInput } from "@pronto/shared/schemas";
 
 interface ListComprasParams {
   page?: number;
@@ -29,5 +29,5 @@ export const comprasApi = {
   cancel: (id: string, data?: { comentario?: string }) =>
     api.patch<OrdenCompraDetail>(`/api/v1/compras/${id}/cancelar`, data),
   historial: (id: string) =>
-    api.get<import("@nexora/shared/types").HistorialOrdenCompra[]>(`/api/v1/compras/${id}/historial`),
+    api.get<import("@pronto/shared/types").HistorialOrdenCompra[]>(`/api/v1/compras/${id}/historial`),
 };

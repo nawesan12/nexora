@@ -8,7 +8,7 @@ import {
 import { useProductos } from "@/hooks/queries/use-products";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import type { MovimientoStock } from "@nexora/shared/types";
+import type { MovimientoStock } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,
@@ -56,9 +56,9 @@ const TIPO_COLORS: Record<string, string> = {
   AJUSTE:
     "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
   TRANSFERENCIA:
-    "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400",
+    "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-teal-400",
   DEVOLUCION:
-    "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
+    "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",
   QUIEBRE:
     "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
 };
@@ -280,7 +280,7 @@ export default function MovimientosStockPage() {
 
       {/* Summary bar */}
       <Card className="movimientos-summary border-0 shadow-sm overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-primary to-violet-500" />
+        <div className="h-1 bg-gradient-to-r from-primary to-amber-500" />
         <CardContent className="py-4">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">

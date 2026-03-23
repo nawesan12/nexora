@@ -2,8 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { direccionSchema } from "@nexora/shared/schemas";
-import type { DireccionInput } from "@nexora/shared/schemas";
+import { direccionSchema } from "@pronto/shared/schemas";
+import type { DireccionInput } from "@pronto/shared/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";

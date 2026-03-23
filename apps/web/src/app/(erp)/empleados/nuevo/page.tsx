@@ -6,7 +6,7 @@ import { useCreateEmpleado } from "@/hooks/queries/use-employees";
 import { EmployeeForm } from "@/components/employees/employee-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, UserPlus } from "lucide-react";
-import type { EmpleadoInput } from "@nexora/shared/schemas";
+import type { EmpleadoInput } from "@pronto/shared/schemas";
 
 export default function NuevoEmpleadoPage() {
   const router = useRouter();

@@ -5,13 +5,13 @@ import type {
   Producto,
   CatalogoProducto,
   Meta,
-} from "@nexora/shared/types";
+} from "@pronto/shared/types";
 import type {
   FamiliaProductoInput,
   CategoriaProductoInput,
   ProductoInput,
   CatalogoProductoInput,
-} from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
 
 export const familiasApi = {
   list: (page = 1, pageSize = 20) =>

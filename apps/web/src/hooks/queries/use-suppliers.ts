@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { proveedoresApi } from "@/lib/suppliers";
-import type { ProveedorInput } from "@nexora/shared/schemas";
+import type { ProveedorInput } from "@pronto/shared/schemas";
 
 export function useProveedores({ page, pageSize, search }: { page?: number; pageSize?: number; search?: string } = {}) {
   return useQuery({

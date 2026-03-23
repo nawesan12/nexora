@@ -1,15 +1,21 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/nexora-erp/nexora/internal/middleware"
-	"github.com/nexora-erp/nexora/internal/pkg/pagination"
-	"github.com/nexora-erp/nexora/internal/pkg/response"
-	"github.com/nexora-erp/nexora/internal/pkg/validator"
-	"github.com/nexora-erp/nexora/internal/service"
+	"github.com/pronto-erp/pronto/internal/middleware"
+	"github.com/pronto-erp/pronto/internal/pkg/excel"
+	"github.com/pronto-erp/pronto/internal/pkg/pagination"
+	"github.com/pronto-erp/pronto/internal/pkg/response"
+	"github.com/pronto-erp/pronto/internal/pkg/validator"
+	"github.com/pronto-erp/pronto/internal/service"
+	"github.com/xuri/excelize/v2"
 )
 
 type ProductHandler struct {
@@ -345,4 +351,152 @@ func (h *ProductHandler) DeleteCatalogo(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	response.NoContent(w)
+}
+
+// --- Bulk Import ---
+
+func (h *ProductHandler) BulkImport(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r.Context())
+	userID := middleware.PgUserID(claims)
+
+	var items []service.CreateProductoInput
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "BAD_REQUEST", "error al leer el body")
+		return
+	}
+	if err := json.Unmarshal(body, &items); err != nil {
+		response.Error(w, http.StatusBadRequest, "BAD_REQUEST", "formato JSON invalido")
+		return
+	}
+	if len(items) == 0 {
+		response.Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "la lista de productos esta vacia")
+		return
+	}
+	if len(items) > 1000 {
+		response.Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "maximo 1000 productos por importacion")
+		return
+	}
+
+	result, err := h.svc.BulkImport(r.Context(), userID, items)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error())
+		return
+	}
+	response.JSON(w, http.StatusOK, result)
+}
+
+func (h *ProductHandler) ImportExcel(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r.Context())
+	userID := middleware.PgUserID(claims)
+
+	// Parse multipart file
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB max
+		response.Error(w, http.StatusBadRequest, "BAD_REQUEST", "error al leer el archivo")
+		return
+	}
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "BAD_REQUEST", "archivo no encontrado en el form")
+		return
+	}
+	defer file.Close()
+
+	// Parse Excel
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "BAD_REQUEST", "no se pudo leer el archivo Excel")
+		return
+	}
+	defer f.Close()
+
+	sheet := f.GetSheetName(0)
+	rows, err := f.GetRows(sheet)
+	if err != nil || len(rows) < 2 {
+		response.Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "el archivo debe tener al menos una fila de headers y una de datos")
+		return
+	}
+
+	// Parse header row to find column indices
+	headerMap := map[string]int{}
+	for i, cell := range rows[0] {
+		headerMap[strings.TrimSpace(strings.ToLower(cell))] = i
+	}
+
+	requiredHeaders := []string{"nombre"}
+	for _, h := range requiredHeaders {
+		if _, ok := headerMap[h]; !ok {
+			response.Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "falta la columna obligatoria: "+h)
+			return
+		}
+	}
+
+	// Parse data rows
+	var items []service.CreateProductoInput
+	for _, row := range rows[1:] {
+		getCell := func(name string) string {
+			idx, ok := headerMap[name]
+			if !ok || idx >= len(row) {
+				return ""
+			}
+			return strings.TrimSpace(row[idx])
+		}
+
+		nombre := getCell("nombre")
+		if nombre == "" {
+			continue
+		}
+
+		precio := 0.0
+		if p := getCell("precio_base"); p != "" {
+			p = strings.ReplaceAll(p, ",", ".")
+			precio, _ = strconv.ParseFloat(p, 64)
+		}
+
+		unidad := strings.ToUpper(getCell("unidad"))
+		if unidad == "" {
+			unidad = "UNIDAD"
+		}
+
+		items = append(items, service.CreateProductoInput{
+			Codigo:      getCell("codigo"),
+			Nombre:      nombre,
+			Descripcion: getCell("descripcion"),
+			PrecioBase:  precio,
+			Unidad:      unidad,
+			AlicuotaIVA: getCell("alicuota_iva"),
+		})
+	}
+
+	if len(items) == 0 {
+		response.Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "no se encontraron filas validas")
+		return
+	}
+
+	result, err := h.svc.BulkImport(r.Context(), userID, items)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error())
+		return
+	}
+	response.JSON(w, http.StatusOK, result)
+}
+
+func (h *ProductHandler) DownloadTemplate(w http.ResponseWriter, r *http.Request) {
+	headers := []string{"nombre", "codigo", "precio_base", "unidad", "descripcion", "alicuota_iva"}
+	sampleRows := [][]string{
+		{"Alimento Balanceado Premium 25kg", "ALM-001", "15500.00", "BOLSA", "Alimento premium para ganado", "21"},
+		{"Suplemento Mineral 5kg", "SUP-002", "8900.50", "UNIDAD", "Suplemento mineral bovino", "10.5"},
+		{"Semilla de Maiz 50kg", "SEM-003", "22000.00", "BOLSA", "", "21"},
+	}
+
+	buf, err := excel.GenerateExcel("Productos", headers, sampleRows)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "error al generar template")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	w.Header().Set("Content-Disposition", "attachment; filename=plantilla_productos.xlsx")
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	w.Write(buf.Bytes())
 }

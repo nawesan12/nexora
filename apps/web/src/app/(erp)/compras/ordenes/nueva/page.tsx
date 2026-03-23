@@ -8,7 +8,7 @@ import { useCreateOrdenCompra } from "@/hooks/queries/use-purchases";
 import { useProveedores } from "@/hooks/queries/use-suppliers";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUserStore } from "@/store/user-store";
-import type { OrdenCompraInput } from "@nexora/shared/schemas";
+import type { OrdenCompraInput } from "@pronto/shared/schemas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

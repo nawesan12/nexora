@@ -1,6 +1,6 @@
 env "local" {
   src = "file://migrations"
-  url = "postgres://nexora:nexora@localhost:5433/nexora?sslmode=disable"
+  url = "postgres://pronto:pronto@localhost:5433/pronto?sslmode=disable"
   dev = "docker://postgres/16/dev?search_path=public"
 
   migration {

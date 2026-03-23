@@ -9,7 +9,7 @@ import {
 } from "@/hooks/queries/use-transfers";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import type { TransferenciaList } from "@nexora/shared/types";
+import type { TransferenciaList } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,
@@ -264,7 +264,7 @@ export default function TransferenciasPage() {
 
       {/* Summary bar */}
       <Card className="transferencias-summary border-0 shadow-sm overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-primary to-violet-500" />
+        <div className="h-1 bg-gradient-to-r from-primary to-amber-500" />
         <CardContent className="py-4">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">

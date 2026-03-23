@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/hibiken/asynq"
+	"github.com/pronto-erp/pronto/internal/email"
 	"github.com/rs/zerolog/log"
 )
 
@@ -14,16 +15,32 @@ type EmailPayload struct {
 	Body    string `json:"body"`
 }
 
-func HandleSendEmail(_ context.Context, t *asynq.Task) error {
+type EmailWorker struct {
+	sender *email.Sender
+}
+
+func NewEmailWorker(sender *email.Sender) *EmailWorker {
+	return &EmailWorker{sender: sender}
+}
+
+func (w *EmailWorker) HandleSendEmail(_ context.Context, t *asynq.Task) error {
 	var payload EmailPayload
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
 		return err
 	}
 
-	log.Info().
-		Str("to", payload.To).
-		Str("subject", payload.Subject).
-		Msg("email task processed (placeholder)")
+	if w.sender == nil {
+		log.Warn().Str("to", payload.To).Str("subject", payload.Subject).Msg("email skipped: no email provider configured")
+		return nil
+	}
 
+	log.Info().Str("to", payload.To).Str("subject", payload.Subject).Msg("sending email")
+
+	if err := w.sender.Send(payload.To, payload.Subject, payload.Body); err != nil {
+		log.Error().Err(err).Str("to", payload.To).Msg("failed to send email")
+		return err
+	}
+
+	log.Info().Str("to", payload.To).Msg("email sent successfully")
 	return nil
 }

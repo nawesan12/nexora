@@ -1,5 +1,5 @@
 {
-  "name": "nexora",
+  "name": "pronto",
   "private": true,
   "scripts": {
     "build": "turbo run build",

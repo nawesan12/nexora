@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { ESTADO_TRANSFERENCIA_LABELS } from "@nexora/shared/constants";
+import { ESTADO_TRANSFERENCIA_LABELS } from "@pronto/shared/constants";
 
 const variants: Record<string, string> = {
   PENDIENTE: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",

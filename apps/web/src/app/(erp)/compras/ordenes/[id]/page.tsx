@@ -11,7 +11,7 @@ import {
 } from "@/hooks/queries/use-purchases";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import { ESTADO_ORDEN_COMPRA_LABELS } from "@nexora/shared/constants";
+import { ESTADO_ORDEN_COMPRA_LABELS } from "@pronto/shared/constants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +38,7 @@ import gsap from "gsap";
 const ESTADO_COLORS: Record<string, string> = {
   BORRADOR: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
   APROBADA: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400",
-  EN_RECEPCION: "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
+  EN_RECEPCION: "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",
   RECIBIDA: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
   RECIBIDA_PARCIALMENTE: "bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400",
   CANCELADA: "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",

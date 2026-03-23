@@ -106,8 +106,8 @@ WHERE reparto_id = $1 AND pedido_id = $2;
 -- name: CreateEventoReparto :one
 INSERT INTO eventos_reparto (
     reparto_id, pedido_id, tipo, latitud, longitud, comentario,
-    monto_cobrado, empleado_id
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    monto_cobrado, empleado_id, firma_url
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING *;
 
 -- name: ListEventosReparto :many

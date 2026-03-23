@@ -7,7 +7,7 @@ import gsap from "gsap";
 import { useClientes, useDeleteCliente } from "@/hooks/queries/use-clients";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import type { Cliente } from "@nexora/shared/types";
+import type { Cliente } from "@pronto/shared/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,
@@ -64,7 +64,7 @@ const REPUTACION_COLORS: Record<string, string> = {
 
 const IVA_COLORS: Record<string, string> = {
   RESPONSABLE_INSCRIPTO:
-    "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
+    "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",
   MONOTRIBUTO:
     "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400",
   EXENTO:

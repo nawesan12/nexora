@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/nexora-erp/nexora/internal/permissions"
-	"github.com/nexora-erp/nexora/internal/pkg/response"
+	"github.com/pronto-erp/pronto/internal/permissions"
+	"github.com/pronto-erp/pronto/internal/pkg/response"
 )
 
 func RequireRoles(roles ...string) func(http.Handler) http.Handler {

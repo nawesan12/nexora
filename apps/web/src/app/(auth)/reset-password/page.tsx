@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import {
   resetPasswordSchema,
   type ResetPasswordInput,
-} from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
 import { authApi } from "@/lib/auth";
 import { ApiClientError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";

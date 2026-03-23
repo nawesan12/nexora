@@ -2,7 +2,7 @@ import { api } from "@/lib/api-client";
 import type {
   TransferenciaList,
   TransferenciaDetail,
-} from "@nexora/shared/types";
+} from "@pronto/shared/types";
 
 interface ListTransferenciasParams {
   page?: number;

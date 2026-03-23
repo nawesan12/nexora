@@ -1,5 +1,5 @@
 import { api } from "./api-client";
-import type { UserInfo } from "@nexora/shared/types";
+import type { UserInfo } from "@pronto/shared/types";
 
 interface LoginRequest {
   email: string;

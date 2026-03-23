@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { repartoSchema, type RepartoInput } from "@nexora/shared/schemas";
+import { repartoSchema, type RepartoInput } from "@pronto/shared/schemas";
 import { useCreateReparto } from "@/hooks/queries/use-logistics";
 import { useVehiculos, useZonas } from "@/hooks/queries/use-logistics";
 import { useEmpleados } from "@/hooks/queries/use-employees";

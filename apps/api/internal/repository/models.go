@@ -560,6 +560,7 @@ type LetraComprobante string
 const (
 	LetraComprobanteA LetraComprobante = "A"
 	LetraComprobanteB LetraComprobante = "B"
+	LetraComprobanteC LetraComprobante = "C"
 	LetraComprobanteN LetraComprobante = "N"
 	LetraComprobanteX LetraComprobante = "X"
 )
@@ -1134,6 +1135,54 @@ func (ns NullUnidadDeMedida) Value() (driver.Value, error) {
 	return string(ns.UnidadDeMedida), nil
 }
 
+type AlicuotaIva string
+
+const (
+	AlicuotaIva0         AlicuotaIva = "0"
+	AlicuotaIva25        AlicuotaIva = "2.5"
+	AlicuotaIva5         AlicuotaIva = "5"
+	AlicuotaIva105       AlicuotaIva = "10.5"
+	AlicuotaIva21        AlicuotaIva = "21"
+	AlicuotaIva27        AlicuotaIva = "27"
+	AlicuotaIvaEXENTO    AlicuotaIva = "EXENTO"
+	AlicuotaIvaNOGRAVADO AlicuotaIva = "NO_GRAVADO"
+)
+
+func (e *AlicuotaIva) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AlicuotaIva(s)
+	case string:
+		*e = AlicuotaIva(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AlicuotaIva: %T", src)
+	}
+	return nil
+}
+
+type NullAlicuotaIva struct {
+	AlicuotaIva AlicuotaIva `json:"alicuota_iva"`
+	Valid       bool        `json:"valid"`
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAlicuotaIva) Scan(value interface{}) error {
+	if value == nil {
+		ns.AlicuotaIva, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AlicuotaIva.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAlicuotaIva) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AlicuotaIva), nil
+}
+
 type ArqueosCaja struct {
 	ID            pgtype.UUID        `json:"id"`
 	CajaID        pgtype.UUID        `json:"caja_id"`
@@ -1288,6 +1337,7 @@ type DetalleComprobante struct {
 	DescuentoPorcentaje pgtype.Numeric `json:"descuento_porcentaje"`
 	DescuentoMonto      pgtype.Numeric `json:"descuento_monto"`
 	Subtotal            pgtype.Numeric `json:"subtotal"`
+	AlicuotaIva         NullAlicuotaIva `json:"alicuota_iva"`
 	Orden               int32          `json:"orden"`
 }
 
@@ -1318,6 +1368,7 @@ type DetallePedido struct {
 	DescuentoPorcentaje pgtype.Numeric `json:"descuento_porcentaje"`
 	DescuentoMonto      pgtype.Numeric `json:"descuento_monto"`
 	Subtotal            pgtype.Numeric `json:"subtotal"`
+	AlicuotaIva         NullAlicuotaIva `json:"alicuota_iva"`
 	CantidadEntregada   pgtype.Numeric `json:"cantidad_entregada"`
 	Orden               int32          `json:"orden"`
 }
@@ -1407,6 +1458,7 @@ type EventosReparto struct {
 	Comentario   pgtype.Text        `json:"comentario"`
 	MontoCobrado pgtype.Numeric     `json:"monto_cobrado"`
 	EmpleadoID   pgtype.UUID        `json:"empleado_id"`
+	FirmaURL     pgtype.Text        `json:"firma_url"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }
 
@@ -1631,6 +1683,7 @@ type Producto struct {
 	PrecioBase  pgtype.Numeric     `json:"precio_base"`
 	Unidad      UnidadDeMedida     `json:"unidad"`
 	CategoriaID pgtype.UUID        `json:"categoria_id"`
+	AlicuotaIva AlicuotaIva        `json:"alicuota_iva"`
 	UsuarioID   pgtype.UUID        `json:"usuario_id"`
 	Active      bool               `json:"active"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
@@ -1768,4 +1821,295 @@ type Zona struct {
 	Active      bool               `json:"active"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+// --- Missing model types (pending sqlc regen) ---
+
+type Ruta struct {
+	ID                 pgtype.UUID        `json:"id"`
+	Nombre             string             `json:"nombre"`
+	ZonaID             pgtype.UUID        `json:"zona_id"`
+	VehiculoID         pgtype.UUID        `json:"vehiculo_id"`
+	DiaSemana          pgtype.Int4        `json:"dia_semana"`
+	HoraSalidaEstimada pgtype.Text        `json:"hora_salida_estimada"`
+	Notas              pgtype.Text        `json:"notas"`
+	SucursalID         pgtype.UUID        `json:"sucursal_id"`
+	UsuarioID          pgtype.UUID        `json:"usuario_id"`
+	Active             bool               `json:"active"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+}
+
+type RutaParada struct {
+	ID                    pgtype.UUID `json:"id"`
+	RutaID                pgtype.UUID `json:"ruta_id"`
+	ClienteID             pgtype.UUID `json:"cliente_id"`
+	DireccionID           pgtype.UUID `json:"direccion_id"`
+	Orden                 int32       `json:"orden"`
+	TiempoEstimadoMinutos int32      `json:"tiempo_estimado_minutos"`
+	Notas                 pgtype.Text `json:"notas"`
+}
+
+type Task struct {
+	ID          pgtype.UUID        `json:"id"`
+	Titulo      string             `json:"titulo"`
+	Descripcion pgtype.Text        `json:"descripcion"`
+	Prioridad   TaskPriority       `json:"prioridad"`
+	Estado      TaskStatus         `json:"estado"`
+	AsignadoA   pgtype.UUID        `json:"asignado_a"`
+	FechaLimite pgtype.Date        `json:"fecha_limite"`
+	UsuarioID   pgtype.UUID        `json:"usuario_id"`
+	Active      bool               `json:"active"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+type AfipConfig struct {
+	ID              pgtype.UUID        `json:"id"`
+	SucursalID      pgtype.UUID        `json:"sucursal_id"`
+	Cuit            string             `json:"cuit"`
+	PuntoVenta      int32              `json:"punto_venta"`
+	CertificadoPem  pgtype.Text        `json:"certificado_pem"`
+	ClavePrivadaPem pgtype.Text        `json:"clave_privada_pem"`
+	Modo            string             `json:"modo"`
+	Activo          bool               `json:"activo"`
+	Token           pgtype.Text        `json:"token"`
+	Sign            pgtype.Text        `json:"sign"`
+	TokenExpiracion pgtype.Timestamptz `json:"token_expiracion"`
+	UsuarioID       pgtype.UUID        `json:"usuario_id"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
+type CategoriaCliente struct {
+	ID                  pgtype.UUID        `json:"id"`
+	Nombre              string             `json:"nombre"`
+	Descripcion         pgtype.Text        `json:"descripcion"`
+	DescuentoPorcentaje pgtype.Numeric     `json:"descuento_porcentaje"`
+	UsuarioID           pgtype.UUID        `json:"usuario_id"`
+	Active              bool               `json:"active"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+}
+
+type Promocion struct {
+	ID             pgtype.UUID        `json:"id"`
+	Nombre         string             `json:"nombre"`
+	Tipo           TipoPromocion      `json:"tipo"`
+	Valor          pgtype.Numeric     `json:"valor"`
+	CantidadMinima pgtype.Int4        `json:"cantidad_minima"`
+	ProductoID     pgtype.UUID        `json:"producto_id"`
+	CategoriaID    pgtype.UUID        `json:"categoria_id"`
+	FechaInicio    pgtype.Date        `json:"fecha_inicio"`
+	FechaFin       pgtype.Date        `json:"fecha_fin"`
+	Activa         bool               `json:"activa"`
+	SucursalID     pgtype.UUID        `json:"sucursal_id"`
+	UsuarioID      pgtype.UUID        `json:"usuario_id"`
+	Active         bool               `json:"active"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type ExtractosBancario struct {
+	ID                pgtype.UUID        `json:"id"`
+	EntidadBancariaID pgtype.UUID        `json:"entidad_bancaria_id"`
+	FechaDesde        pgtype.Date        `json:"fecha_desde"`
+	FechaHasta        pgtype.Date        `json:"fecha_hasta"`
+	ArchivoNombre     pgtype.Text        `json:"archivo_nombre"`
+	UsuarioID         pgtype.UUID        `json:"usuario_id"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+}
+
+type MovimientosBancario struct {
+	ID                 pgtype.UUID        `json:"id"`
+	ExtractoID         pgtype.UUID        `json:"extracto_id"`
+	Fecha              pgtype.Date        `json:"fecha"`
+	Descripcion        string             `json:"descripcion"`
+	Monto              pgtype.Numeric     `json:"monto"`
+	Referencia         pgtype.Text        `json:"referencia"`
+	EstadoConciliacion EstadoConciliacion `json:"estado_conciliacion"`
+	MovimientoCajaID   pgtype.UUID        `json:"movimiento_caja_id"`
+	UsuarioID          pgtype.UUID        `json:"usuario_id"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+}
+
+// --- Missing enum types (pending sqlc regen) ---
+
+type AfipEstado string
+
+func (e *AfipEstado) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AfipEstado(s)
+	case string:
+		*e = AfipEstado(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AfipEstado: %T", src)
+	}
+	return nil
+}
+
+type NullAfipEstado struct {
+	AfipEstado AfipEstado `json:"afip_estado"`
+	Valid      bool       `json:"valid"`
+}
+
+func (ns *NullAfipEstado) Scan(value interface{}) error {
+	if value == nil {
+		ns.AfipEstado, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AfipEstado.Scan(value)
+}
+
+func (ns NullAfipEstado) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AfipEstado), nil
+}
+
+type TipoPromocion string
+
+func (e *TipoPromocion) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TipoPromocion(s)
+	case string:
+		*e = TipoPromocion(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TipoPromocion: %T", src)
+	}
+	return nil
+}
+
+type NullTipoPromocion struct {
+	TipoPromocion TipoPromocion `json:"tipo_promocion"`
+	Valid         bool          `json:"valid"`
+}
+
+func (ns *NullTipoPromocion) Scan(value interface{}) error {
+	if value == nil {
+		ns.TipoPromocion, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TipoPromocion.Scan(value)
+}
+
+func (ns NullTipoPromocion) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TipoPromocion), nil
+}
+
+type EstadoConciliacion string
+
+const (
+	EstadoConciliacionPENDIENTE  EstadoConciliacion = "PENDIENTE"
+	EstadoConciliacionCONCILIADO EstadoConciliacion = "CONCILIADO"
+	EstadoConciliacionDESCARTADO EstadoConciliacion = "DESCARTADO"
+)
+
+func (e *EstadoConciliacion) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EstadoConciliacion(s)
+	case string:
+		*e = EstadoConciliacion(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EstadoConciliacion: %T", src)
+	}
+	return nil
+}
+
+type NullEstadoConciliacion struct {
+	EstadoConciliacion EstadoConciliacion `json:"estado_conciliacion"`
+	Valid              bool               `json:"valid"`
+}
+
+func (ns *NullEstadoConciliacion) Scan(value interface{}) error {
+	if value == nil {
+		ns.EstadoConciliacion, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EstadoConciliacion.Scan(value)
+}
+
+func (ns NullEstadoConciliacion) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EstadoConciliacion), nil
+}
+
+type TaskPriority string
+
+func (e *TaskPriority) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TaskPriority(s)
+	case string:
+		*e = TaskPriority(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TaskPriority: %T", src)
+	}
+	return nil
+}
+
+type NullTaskPriority struct {
+	TaskPriority TaskPriority `json:"task_priority"`
+	Valid        bool         `json:"valid"`
+}
+
+func (ns *NullTaskPriority) Scan(value interface{}) error {
+	if value == nil {
+		ns.TaskPriority, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TaskPriority.Scan(value)
+}
+
+func (ns NullTaskPriority) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TaskPriority), nil
+}
+
+type TaskStatus string
+
+func (e *TaskStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TaskStatus(s)
+	case string:
+		*e = TaskStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TaskStatus: %T", src)
+	}
+	return nil
+}
+
+type NullTaskStatus struct {
+	TaskStatus TaskStatus `json:"task_status"`
+	Valid      bool       `json:"valid"`
+}
+
+func (ns *NullTaskStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.TaskStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TaskStatus.Scan(value)
+}
+
+func (ns NullTaskStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TaskStatus), nil
 }

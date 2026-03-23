@@ -10,9 +10,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { ORDER_STATUS_LABELS } from "@nexora/shared/constants";
-import { getAvailableTransitions } from "@nexora/shared/constants";
-import type { Rol } from "@nexora/shared/constants";
+import { ORDER_STATUS_LABELS } from "@pronto/shared/constants";
+import { getAvailableTransitions } from "@pronto/shared/constants";
+import type { Rol } from "@pronto/shared/constants";
 import { useTransitionPedido } from "@/hooks/queries/use-orders";
 
 interface Props {

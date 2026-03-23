@@ -8,7 +8,7 @@ import {
   categoriaProductoSchema,
   type FamiliaProductoInput,
   type CategoriaProductoInput,
-} from "@nexora/shared/schemas";
+} from "@pronto/shared/schemas";
 import {
   useFamilias,
   useCreateFamilia,
@@ -21,7 +21,7 @@ import {
 } from "@/hooks/queries/use-products";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import type { FamiliaProducto, CategoriaProducto } from "@nexora/shared/types";
+import type { FamiliaProducto, CategoriaProducto } from "@pronto/shared/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";

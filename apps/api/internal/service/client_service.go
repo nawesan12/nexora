@@ -9,7 +9,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nexora-erp/nexora/internal/repository"
+	"github.com/pronto-erp/pronto/internal/pkg/cuit"
+	"github.com/pronto-erp/pronto/internal/repository"
 )
 
 var (
@@ -155,6 +156,9 @@ func coordFromNumeric(n pgtype.Numeric) float64 {
 // --- Clientes ---
 
 func (s *ClientService) CreateCliente(ctx context.Context, userID pgtype.UUID, input CreateClienteInput) (*ClienteResponse, error) {
+	if err := cuit.Validate(input.Cuit); err != nil {
+		return nil, fmt.Errorf("CUIT invalido: %w", err)
+	}
 	if input.Cuit != "" {
 		existing, err := s.queries.GetClienteByCuit(ctx, repository.GetClienteByCuitParams{
 			Cuit: pgText(input.Cuit), UsuarioID: userID,
@@ -272,6 +276,9 @@ func (s *ClientService) ListClientes(ctx context.Context, userID pgtype.UUID, se
 }
 
 func (s *ClientService) UpdateCliente(ctx context.Context, userID pgtype.UUID, id string, input UpdateClienteInput) (*ClienteResponse, error) {
+	if err := cuit.Validate(input.Cuit); err != nil {
+		return nil, fmt.Errorf("CUIT invalido: %w", err)
+	}
 	pgID, err := pgUUID(id)
 	if err != nil {
 		return nil, ErrClienteNotFound

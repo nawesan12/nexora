@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/nexora-erp/nexora/internal/middleware"
-	"github.com/nexora-erp/nexora/internal/permissions"
-	"github.com/nexora-erp/nexora/internal/pkg/response"
+	"github.com/pronto-erp/pronto/internal/middleware"
+	"github.com/pronto-erp/pronto/internal/permissions"
+	"github.com/pronto-erp/pronto/internal/pkg/response"
 )
 
 const version = "0.1.0"
@@ -23,11 +23,11 @@ func (s *Server) setupRouter() *chi.Mux {
 	r.Use(chimw.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(chimw.Recoverer)
-	r.Use(middleware.RateLimit(s.redis, 100, time.Minute))
+	r.Use(middleware.RateLimitByMethod(s.redis))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   strings.Split(s.cfg.CORSAllowedOrigins, ","),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-ID"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-ID", "X-API-Key", "X-API-Secret"},
 		ExposedHeaders:   []string{"Link", "X-Request-ID"},
 		AllowCredentials: true,
 		MaxAge:           300,
@@ -48,6 +48,13 @@ func (s *Server) setupRouter() *chi.Mux {
 			r.Post("/forgot-password", s.authHandler.ForgotPassword)
 			r.Post("/reset-password", s.authHandler.ResetPassword)
 			r.Post("/verify-email", s.authHandler.VerifyEmail)
+
+			// Google OAuth
+			r.Get("/google", s.oauthHandler.GoogleLogin)
+			r.Get("/google/callback", s.oauthHandler.GoogleCallback)
+
+			// Demo account
+			r.Post("/demo", s.demoHandler.SeedDemo)
 
 			// Protected
 			r.Group(func(r chi.Router) {
@@ -97,9 +104,12 @@ func (s *Server) setupRouter() *chi.Mux {
 			// Productos
 			r.Route("/productos", func(r chi.Router) {
 				r.With(middleware.RequirePermission(permissions.ProductsView)).Get("/", s.productHandler.ListProductos)
+				r.With(middleware.RequirePermission(permissions.ProductsView)).Get("/importar/template", s.productHandler.DownloadTemplate)
 				r.Group(func(r chi.Router) {
 					r.Use(middleware.RequirePermission(permissions.ProductsManage))
 					r.Post("/", s.productHandler.CreateProducto)
+					r.Post("/importar/bulk", s.productHandler.BulkImport)
+					r.Post("/importar/excel", s.productHandler.ImportExcel)
 				})
 				r.Route("/{id}", func(r chi.Router) {
 					r.With(middleware.RequirePermission(permissions.ProductsView)).Get("/", s.productHandler.GetProducto)
@@ -175,6 +185,7 @@ func (s *Server) setupRouter() *chi.Mux {
 			// Facturas
 			r.Route("/facturas", func(r chi.Router) {
 				r.With(middleware.RequirePermission(permissions.InvoicesView)).Get("/", s.invoiceHandler.List)
+				r.With(middleware.RequirePermission(permissions.InvoicesView)).Get("/batch-pdf", s.invoiceHandler.GetBatchPDF)
 				r.Group(func(r chi.Router) {
 					r.Use(middleware.RequirePermission(permissions.InvoicesCreate))
 					r.Post("/", s.invoiceHandler.CreateManual)
@@ -182,6 +193,7 @@ func (s *Server) setupRouter() *chi.Mux {
 				})
 				r.Route("/{id}", func(r chi.Router) {
 					r.With(middleware.RequirePermission(permissions.InvoicesView)).Get("/", s.invoiceHandler.Get)
+					r.With(middleware.RequirePermission(permissions.InvoicesView)).Get("/pdf", s.invoiceHandler.GetPDF)
 					r.Group(func(r chi.Router) {
 						r.Use(middleware.RequirePermission(permissions.InvoicesCreate))
 						r.Patch("/emitir", s.invoiceHandler.Emit)
@@ -384,6 +396,52 @@ func (s *Server) setupRouter() *chi.Mux {
 						})
 					})
 				})
+
+				// Bank Accounts Dashboard
+				r.Get("/cuentas-bancarias", s.bankAccountHandler.GetBankDashboard)
+
+				// Financial Indices
+				r.With(middleware.RequirePermission(permissions.FinanceReports)).Get("/indices", s.bankAccountHandler.GetFinancialIndices)
+			})
+
+			// Retenciones
+			r.Route("/finanzas/retenciones", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/", s.retencionHandler.List)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.FinanceExpenses))
+					r.Post("/", s.retencionHandler.Create)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/", s.retencionHandler.Get)
+					r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/certificado", s.retencionHandler.DownloadCertificate)
+					r.Group(func(r chi.Router) {
+						r.Use(middleware.RequirePermission(permissions.FinanceExpenses))
+						r.Patch("/anular", s.retencionHandler.Anular)
+						r.Delete("/", s.retencionHandler.Delete)
+					})
+				})
+			})
+
+			// Percepciones config
+			r.Route("/configuracion/percepciones", func(r chi.Router) {
+				r.Use(middleware.RequirePermission(permissions.SettingsManage))
+				r.Get("/", s.percepcionHandler.ListConfigs)
+				r.Post("/", s.percepcionHandler.CreateConfig)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", s.percepcionHandler.GetConfig)
+					r.Put("/", s.percepcionHandler.UpdateConfig)
+					r.Delete("/", s.percepcionHandler.DeleteConfig)
+				})
+			})
+
+			// Percepciones records
+			r.Route("/finanzas/percepciones", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/", s.percepcionHandler.List)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.FinanceExpenses))
+					r.Post("/", s.percepcionHandler.Create)
+					r.Post("/calcular", s.percepcionHandler.Calculate)
+				})
 			})
 
 			// Proveedores
@@ -430,6 +488,40 @@ func (s *Server) setupRouter() *chi.Mux {
 				})
 			})
 
+			// Facturas Proveedor (Supplier Invoices)
+			r.Route("/compras/facturas", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.PurchasesView)).Get("/", s.supplierInvoiceHandler.List)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.PurchasesCreate))
+					r.Post("/", s.supplierInvoiceHandler.Create)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.PurchasesView)).Get("/", s.supplierInvoiceHandler.Get)
+					r.Group(func(r chi.Router) {
+						r.Use(middleware.RequirePermission(permissions.PurchasesCreate))
+						r.Patch("/anular", s.supplierInvoiceHandler.Anular)
+						r.Delete("/", s.supplierInvoiceHandler.Delete)
+					})
+				})
+			})
+
+			// Devoluciones Proveedor (Supplier Returns)
+			r.Route("/compras/devoluciones", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.PurchasesView)).Get("/", s.supplierReturnHandler.List)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.PurchasesCreate))
+					r.Post("/", s.supplierReturnHandler.Create)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.PurchasesView)).Get("/", s.supplierReturnHandler.Get)
+					r.Group(func(r chi.Router) {
+						r.Use(middleware.RequirePermission(permissions.PurchasesCreate))
+						r.Patch("/estado", s.supplierReturnHandler.Transition)
+						r.Delete("/", s.supplierReturnHandler.Delete)
+					})
+				})
+			})
+
 			// Configuracion impuestos
 			r.Route("/configuracion/impuestos", func(r chi.Router) {
 				r.Use(middleware.RequirePermission(permissions.SettingsView))
@@ -459,6 +551,36 @@ func (s *Server) setupRouter() *chi.Mux {
 				})
 			})
 
+			// Conversiones de Unidad
+			r.Route("/configuracion/conversiones", func(r chi.Router) {
+				r.Use(middleware.RequirePermission(permissions.SettingsView))
+				r.Get("/", s.conversionHandler.List)
+				r.Get("/convert", s.conversionHandler.Convert)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.SettingsManage))
+					r.Post("/", s.conversionHandler.Create)
+					r.Route("/{id}", func(r chi.Router) {
+						r.Put("/", s.conversionHandler.Update)
+						r.Delete("/", s.conversionHandler.Delete)
+					})
+				})
+			})
+
+			// Configuracion Retenciones
+			r.Route("/configuracion/retenciones", func(r chi.Router) {
+				r.Use(middleware.RequirePermission(permissions.SettingsView))
+				r.Get("/", s.retencionConfigHandler.List)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.SettingsManage))
+					r.Post("/", s.retencionConfigHandler.Create)
+					r.Route("/{id}", func(r chi.Router) {
+						r.Get("/", s.retencionConfigHandler.Get)
+						r.Put("/", s.retencionConfigHandler.Update)
+						r.Delete("/", s.retencionConfigHandler.Delete)
+					})
+				})
+			})
+
 			// Dashboard
 			r.Route("/dashboard", func(r chi.Router) {
 				r.Get("/stats", s.dashboardHandler.GetStats)
@@ -478,6 +600,65 @@ func (s *Server) setupRouter() *chi.Mux {
 					r.With(middleware.RequirePermission(permissions.StockView)).Get("/", s.transferHandler.Get)
 					r.With(middleware.RequirePermission(permissions.StockTransfer)).Patch("/estado", s.transferHandler.Transition)
 					r.With(middleware.RequirePermission(permissions.StockTransfer)).Delete("/", s.transferHandler.Delete)
+				})
+			})
+
+			// Inventario - Devoluciones
+			r.Route("/inventario/devoluciones", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.StockView)).Get("/", s.devolucionHandler.List)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.StockAdjust))
+					r.Post("/", s.devolucionHandler.Create)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.StockView)).Get("/", s.devolucionHandler.Get)
+					r.Group(func(r chi.Router) {
+						r.Use(middleware.RequirePermission(permissions.StockAdjust))
+						r.Patch("/aprobar", s.devolucionHandler.Approve)
+						r.Patch("/rechazar", s.devolucionHandler.Reject)
+						r.Delete("/", s.devolucionHandler.Delete)
+					})
+				})
+			})
+
+			// Listas de Precios
+			r.Route("/inventario/listas-precios", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.ProductsView)).Get("/", s.priceListHandler.List)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.ProductsManage))
+					r.Post("/", s.priceListHandler.Create)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.ProductsView)).Get("/", s.priceListHandler.Get)
+					r.Group(func(r chi.Router) {
+						r.Use(middleware.RequirePermission(permissions.ProductsManage))
+						r.Put("/", s.priceListHandler.Update)
+						r.Delete("/", s.priceListHandler.Delete)
+					})
+					r.With(middleware.RequirePermission(permissions.ProductsView)).Get("/precios", s.priceListHandler.ListPrecios)
+					r.Group(func(r chi.Router) {
+						r.Use(middleware.RequirePermission(permissions.ProductsManage))
+						r.Post("/precios", s.priceListHandler.UpsertPrecio)
+						r.Delete("/precios/{productoId}", s.priceListHandler.DeletePrecio)
+					})
+				})
+			})
+
+			// Client price list lookup
+			r.With(middleware.RequirePermission(permissions.OrdersView)).Get("/clientes/{clienteId}/precios", s.priceListHandler.GetPreciosForCliente)
+
+			// Inventario - Lotes (stock lot tracking with expiry)
+			r.Route("/inventario/lotes", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.StockView)).Get("/", s.loteHandler.List)
+				r.With(middleware.RequirePermission(permissions.StockView)).Get("/alertas", s.loteHandler.Alertas)
+				r.With(middleware.RequirePermission(permissions.StockView)).Get("/fifo", s.loteHandler.FIFO)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.StockAdjust))
+					r.Post("/", s.loteHandler.Create)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.StockView)).Get("/", s.loteHandler.Get)
+					r.With(middleware.RequirePermission(permissions.StockAdjust)).Post("/ajuste", s.loteHandler.AjustarStock)
 				})
 			})
 
@@ -551,10 +732,29 @@ func (s *Server) setupRouter() *chi.Mux {
 				r.Get("/productos", s.reportHandler.GetProductReport)
 				r.Group(func(r chi.Router) {
 					r.Use(middleware.RequirePermission(permissions.ReportsExport))
+					r.Use(middleware.RateLimitExport(s.redis))
 					r.Get("/ventas/exportar", s.reportHandler.ExportSalesCSV)
 					r.Get("/compras/exportar", s.reportHandler.ExportPurchasesCSV)
 					r.Get("/inventario/exportar", s.reportHandler.ExportInventoryCSV)
 					r.Get("/finanzas/exportar", s.reportHandler.ExportFinanceCSV)
+					r.Get("/ventas/excel", s.reportHandler.ExportSalesExcel)
+					r.Get("/compras/excel", s.reportHandler.ExportPurchasesExcel)
+					r.Get("/inventario/excel", s.reportHandler.ExportInventoryExcel)
+					r.Get("/finanzas/excel", s.reportHandler.ExportFinanceExcel)
+				})
+
+				// Tax reports
+				r.Get("/libro-iva-ventas", s.taxReportHandler.LibroIVAVentas)
+				r.Get("/libro-iva-compras", s.taxReportHandler.LibroIVACompras)
+				r.Get("/iibb", s.taxReportHandler.ResumenIIBB)
+				r.Get("/retenciones-resumen", s.taxReportHandler.ResumenRetenciones)
+
+				// CITI exports (require ReportsExport permission)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.ReportsExport))
+					r.Use(middleware.RateLimitExport(s.redis))
+					r.Get("/citi-ventas/exportar", s.taxReportHandler.ExportCITIVentas)
+					r.Get("/citi-compras/exportar", s.taxReportHandler.ExportCITICompras)
 				})
 			})
 
@@ -573,7 +773,145 @@ func (s *Server) setupRouter() *chi.Mux {
 				r.Use(middleware.RequirePermission(permissions.InvoicesCreate))
 				r.Post("/", s.afipHandler.AuthorizeInvoice)
 			})
+
+			// Sales KPIs
+			r.With(middleware.RequirePermission(permissions.ReportsView)).Get("/ventas/kpis", s.salesKPIHandler.GetKPIs)
+
+			// Fidelidad (Customer Loyalty)
+			r.Route("/fidelidad", func(r chi.Router) {
+				r.Use(middleware.RequirePermission(permissions.ClientsView))
+				r.Get("/programa", s.loyaltyHandler.GetPrograma)
+				r.Get("/clientes/{clienteId}/puntos", s.loyaltyHandler.GetClientePuntos)
+				r.Get("/clientes/{clienteId}/movimientos", s.loyaltyHandler.ListMovimientos)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.ClientsManage))
+					r.Put("/programa", s.loyaltyHandler.UpsertPrograma)
+					r.Post("/clientes/{clienteId}/acumular", s.loyaltyHandler.Acumular)
+					r.Post("/clientes/{clienteId}/canjear", s.loyaltyHandler.Canjear)
+				})
+			})
+
+			// User Settings (dashboard layout)
+			r.Route("/configuracion/usuario", func(r chi.Router) {
+				r.Get("/dashboard-layout", s.userSettingsHandler.GetDashboardLayout)
+				r.Put("/dashboard-layout", s.userSettingsHandler.SaveDashboardLayout)
+			})
+
+			// Salidas Vendedor
+			r.Route("/salidas-vendedor", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.EmployeesView)).Get("/", s.salidaVendedorHandler.ListByFecha)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.EmployeesEdit))
+					r.Post("/", s.salidaVendedorHandler.RegistrarSalida)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.EmployeesView)).Get("/", s.salidaVendedorHandler.Get)
+					r.Group(func(r chi.Router) {
+						r.Use(middleware.RequirePermission(permissions.EmployeesEdit))
+						r.Patch("/regreso", s.salidaVendedorHandler.RegistrarRegreso)
+						r.Delete("/", s.salidaVendedorHandler.Delete)
+					})
+				})
+			})
+
+			// Cobros (Accounts Receivable - Payments)
+			r.Route("/finanzas/cobros", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/", s.paymentHandler.ListPagos)
+				r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/aging", s.paymentHandler.GetAgingReport)
+				r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/comprobantes-con-deuda", s.paymentHandler.ListComprobantesConDeuda)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.FinanceCashRegister))
+					r.Post("/", s.paymentHandler.CreatePago)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/", s.paymentHandler.GetPago)
+					r.With(middleware.RequirePermission(permissions.FinanceCashRegister)).Patch("/anular", s.paymentHandler.AnularPago)
+				})
+			})
+
+			// Cliente Balance & Credit
+			r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/clientes/{id}/saldo", s.paymentHandler.GetClienteBalance)
+			r.With(middleware.RequirePermission(permissions.FinanceCashRegister)).Put("/clientes/{id}/limite-credito", s.paymentHandler.UpdateClienteLimiteCredito)
+
+			// Pagos a Proveedor (Accounts Payable)
+			r.Route("/finanzas/pagos-proveedor", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/", s.paymentHandler.ListPagosProveedor)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.FinanceExpenses))
+					r.Post("/", s.paymentHandler.CreatePagoProveedor)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.FinanceView)).Get("/", s.paymentHandler.GetPagoProveedor)
+					r.With(middleware.RequirePermission(permissions.FinanceExpenses)).Patch("/anular", s.paymentHandler.AnularPagoProveedor)
+				})
+			})
+
+			// Cotizaciones (exchange rates)
+			r.Route("/finanzas/cotizaciones", func(r chi.Router) {
+				r.Use(middleware.RequirePermission(permissions.FinanceView))
+				r.Get("/", s.cotizacionHandler.List)
+				r.Get("/tasa", s.cotizacionHandler.GetRate)
+				r.Post("/", s.cotizacionHandler.Create)
+				r.Delete("/{id}", s.cotizacionHandler.Delete)
+			})
+
+			// Intereses por Mora
+			r.Route("/finanzas/intereses", func(r chi.Router) {
+				r.Use(middleware.RequirePermission(permissions.FinanceView))
+				r.Get("/", s.interesMoraHandler.List)
+				r.Get("/config", s.interesMoraHandler.GetConfig)
+				r.Post("/config", s.interesMoraHandler.UpsertConfig)
+				r.Post("/calcular", s.interesMoraHandler.CalculateOverdue)
+				r.Patch("/{id}/condonar", s.interesMoraHandler.Waive)
+			})
+
+			// Periodos Fiscales
+			r.Route("/configuracion/periodos", func(r chi.Router) {
+				r.Use(middleware.RequirePermission(permissions.SettingsManage))
+				r.Get("/", s.periodoFiscalHandler.List)
+				r.Post("/cerrar", s.periodoFiscalHandler.Close)
+				r.Post("/reabrir", s.periodoFiscalHandler.Reopen)
+			})
+
+			// E-commerce Admin (API Client management)
+			r.Route("/ecommerce/clients", func(r chi.Router) {
+				r.Use(middleware.RequirePermission(permissions.SettingsManage))
+				r.Get("/", s.ecommerceHandler.ListClients)
+				r.Post("/", s.ecommerceHandler.CreateClient)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", s.ecommerceHandler.GetClient)
+					r.Put("/", s.ecommerceHandler.UpdateClient)
+					r.Delete("/", s.ecommerceHandler.DeleteClient)
+					r.Post("/rotate-secret", s.ecommerceHandler.RotateSecret)
+				})
+			})
+
+			// Visitas Cliente
+			r.Route("/visitas", func(r chi.Router) {
+				r.With(middleware.RequirePermission(permissions.ClientsView)).Get("/", s.visitaHandler.List)
+				r.With(middleware.RequirePermission(permissions.ClientsView)).Get("/hoy", s.visitaHandler.ListToday)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequirePermission(permissions.ClientsManage))
+					r.Post("/", s.visitaHandler.Create)
+				})
+				r.Route("/{id}", func(r chi.Router) {
+					r.With(middleware.RequirePermission(permissions.ClientsView)).Get("/", s.visitaHandler.Get)
+					r.Group(func(r chi.Router) {
+						r.Use(middleware.RequirePermission(permissions.ClientsManage))
+						r.Put("/", s.visitaHandler.Update)
+						r.Delete("/", s.visitaHandler.Delete)
+					})
+				})
+			})
 		})
+	})
+
+	// E-commerce Public API (API Key auth)
+	r.Route("/api/v1/ecommerce", func(r chi.Router) {
+		r.Use(middleware.ApiKeyAuth(s.ecommerceSvc))
+		r.Get("/products", s.ecommerceHandler.PublicListProducts)
+		r.Get("/products/{id}", s.ecommerceHandler.PublicGetProduct)
+		r.Get("/inventory/metrics", s.ecommerceHandler.PublicGetInventoryMetrics)
 	})
 
 	// WebSocket

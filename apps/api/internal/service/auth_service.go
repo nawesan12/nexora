@@ -2,17 +2,22 @@ package service
 
 import (
 	"context"
+	randio "crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	jwtpkg "github.com/nexora-erp/nexora/internal/pkg/jwt"
-	"github.com/nexora-erp/nexora/internal/permissions"
-	"github.com/nexora-erp/nexora/internal/repository"
+	jwtpkg "github.com/pronto-erp/pronto/internal/pkg/jwt"
+	"github.com/pronto-erp/pronto/internal/permissions"
+	"github.com/pronto-erp/pronto/internal/repository"
+	"github.com/pronto-erp/pronto/internal/worker"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -44,16 +49,20 @@ type BranchResponse struct {
 }
 
 type AuthService struct {
-	db      *pgxpool.Pool
-	queries *repository.Queries
-	jwt     *jwtpkg.Manager
+	db          *pgxpool.Pool
+	queries     *repository.Queries
+	jwt         *jwtpkg.Manager
+	asynqClient *asynq.Client
+	appURL      string
 }
 
-func NewAuthService(db *pgxpool.Pool, jwt *jwtpkg.Manager) *AuthService {
+func NewAuthService(db *pgxpool.Pool, jwt *jwtpkg.Manager, asynqClient *asynq.Client, appURL string) *AuthService {
 	return &AuthService{
-		db:      db,
-		queries: repository.New(db),
-		jwt:     jwt,
+		db:          db,
+		queries:     repository.New(db),
+		jwt:         jwt,
+		asynqClient: asynqClient,
+		appURL:      appURL,
 	}
 }
 
@@ -172,6 +181,14 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (*Regis
 	if err != nil {
 		return nil, fmt.Errorf("store refresh token: %w", err)
 	}
+
+	// Enqueue welcome + verification emails
+	s.enqueueEmail(func() (*asynq.Task, error) {
+		return worker.NewWelcomeEmailTask(user.Email, user.Nombre, s.appURL+"/login")
+	})
+	s.enqueueEmail(func() (*asynq.Task, error) {
+		return worker.NewEmailVerificationTask(user.Email, user.Nombre, s.appURL+"/verify?token="+verificationRaw)
+	})
 
 	return &RegisterResult{
 		User: UserResponse{
@@ -363,7 +380,7 @@ func (s *AuthService) GetMe(ctx context.Context, userID uuid.UUID) (*UserRespons
 }
 
 func (s *AuthService) RequestPasswordReset(ctx context.Context, email string) (string, error) {
-	_, err := s.queries.GetUserByEmail(ctx, email)
+	user, err := s.queries.GetUserByEmail(ctx, email)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", nil // don't reveal if user exists
 	}
@@ -381,6 +398,11 @@ func (s *AuthService) RequestPasswordReset(ctx context.Context, email string) (s
 	if err != nil {
 		return "", fmt.Errorf("create token: %w", err)
 	}
+
+	// Enqueue password reset email
+	s.enqueueEmail(func() (*asynq.Task, error) {
+		return worker.NewPasswordResetTask(email, user.Nombre, s.appURL+"/reset-password?token="+raw)
+	})
 
 	return raw, nil
 }
@@ -438,6 +460,99 @@ func (s *AuthService) VerifyEmail(ctx context.Context, token string) error {
 
 	_ = s.queries.MarkEmailVerificationTokenUsed(ctx, vt.ID)
 	return nil
+}
+
+// GoogleLoginInput holds Google OAuth user data.
+type GoogleLoginInput struct {
+	Email    string
+	Nombre   string
+	Apellido string
+}
+
+// LoginOrRegisterGoogle finds an existing user by email or creates a new one,
+// then returns JWT tokens. The user's email is marked as verified.
+func (s *AuthService) LoginOrRegisterGoogle(ctx context.Context, input GoogleLoginInput) (*LoginResult, error) {
+	user, err := s.queries.GetUserByEmail(ctx, input.Email)
+	if err == nil {
+		// Existing user — generate tokens
+		return s.generateLoginResult(ctx, user)
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("get user by email: %w", err)
+	}
+
+	// User does not exist — register with a random password
+	randomBytes := make([]byte, 32)
+	if _, err := randio.Read(randomBytes); err != nil {
+		return nil, fmt.Errorf("generate random password: %w", err)
+	}
+	randomPassword := hex.EncodeToString(randomBytes)
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(randomPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("hash password: %w", err)
+	}
+
+	nombre := input.Nombre
+	if nombre == "" {
+		nombre = "Usuario"
+	}
+	apellido := input.Apellido
+	if apellido == "" {
+		apellido = "Google"
+	}
+
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.queries.WithTx(tx)
+
+	user, err = qtx.CreateUser(ctx, repository.CreateUserParams{
+		Email:        input.Email,
+		PasswordHash: string(hash),
+		Nombre:       nombre,
+		Apellido:     apellido,
+		Rol:          repository.RolADMIN,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create user: %w", err)
+	}
+
+	_, err = qtx.CreateBranch(ctx, repository.CreateBranchParams{
+		Nombre:    nombre + " " + apellido,
+		Direccion: pgtype.Text{},
+		Telefono:  pgtype.Text{},
+		UsuarioID: user.ID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create branch: %w", err)
+	}
+
+	_, err = qtx.CreateUserSettings(ctx, user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("create settings: %w", err)
+	}
+
+	// Mark email as verified since Google already verified it
+	err = qtx.UpdateUserEmailVerified(ctx, input.Email)
+	if err != nil {
+		return nil, fmt.Errorf("verify email: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit tx: %w", err)
+	}
+
+	// Re-fetch user to get updated email_verified flag
+	user, err = s.queries.GetUserByEmail(ctx, input.Email)
+	if err != nil {
+		return nil, fmt.Errorf("re-fetch user: %w", err)
+	}
+
+	return s.generateLoginResult(ctx, user)
 }
 
 // helpers
@@ -533,4 +648,18 @@ func toBranchResponses(branches []repository.Sucursale) []BranchResponse {
 		result = append(result, br)
 	}
 	return result
+}
+
+func (s *AuthService) enqueueEmail(fn func() (*asynq.Task, error)) {
+	if s.asynqClient == nil {
+		return
+	}
+	task, err := fn()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to create email task")
+		return
+	}
+	if _, err := s.asynqClient.Enqueue(task); err != nil {
+		log.Error().Err(err).Msg("failed to enqueue email task")
+	}
 }

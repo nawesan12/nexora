@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { useEmpleados, useDeleteEmpleado } from "@/hooks/queries/use-employees";
 import { useUserStore } from "@/store/user-store";
 import { hasPermission } from "@/lib/permissions";
-import type { Rol } from "@nexora/shared/constants";
-import { ROLE_LABELS, ESTADO_EMPLEADO_LABELS } from "@nexora/shared/constants";
-import type { Empleado } from "@nexora/shared/types";
+import type { Rol } from "@pronto/shared/constants";
+import { ROLE_LABELS, ESTADO_EMPLEADO_LABELS } from "@pronto/shared/constants";
+import type { Empleado } from "@pronto/shared/types";
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { DataTable, DataTableColumnHeader, DataTableRowActions, type RowAction } from "@/components/data-table";
 import { EmployeeBulkActions } from "@/components/employees/employee-bulk-actions";
@@ -38,24 +38,24 @@ import { useDebounce } from "@/hooks/use-debounce";
 import gsap from "gsap";
 
 const ROLE_COLORS: Record<string, string> = {
-  ADMIN: "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400",
+  ADMIN: "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",
   VENDEDOR: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400",
   SUPERVISOR: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
   FINANZAS: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
   REPARTIDOR: "bg-cyan-100 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-400",
   JEFE_VENTAS: "bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400",
-  DEPOSITO: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400",
+  DEPOSITO: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-teal-400",
   VENDEDOR_CALLE: "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400",
 };
 
 const ROLE_AVATAR_COLORS: Record<string, string> = {
-  ADMIN: "bg-violet-500",
+  ADMIN: "bg-amber-500",
   VENDEDOR: "bg-blue-500",
   SUPERVISOR: "bg-amber-500",
   FINANZAS: "bg-emerald-500",
   REPARTIDOR: "bg-cyan-500",
   JEFE_VENTAS: "bg-rose-500",
-  DEPOSITO: "bg-indigo-500",
+  DEPOSITO: "bg-amber-500",
   VENDEDOR_CALLE: "bg-sky-500",
 };
 

@@ -1,18 +1,18 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
-/* ===== Nexora Design Tokens ===== */
+/* ===== Pronto Design Tokens ===== */
 
 :root {
-  /* Primary - Deep Indigo */
-  --primary: #1E1B4B;
+  /* Primary - Deep Teal */
+  --primary: #134E4A;
   --primary-foreground: #FFFFFF;
-  --primary-hover: #312E81;
+  --primary-hover: #115E59;
 
-  /* Accent - Electric Violet */
-  --accent: #7C3AED;
+  /* Accent - Warm Amber */
+  --accent: #D97706;
   --accent-foreground: #FFFFFF;
-  --accent-hover: #6D28D9;
+  --accent-hover: #B45309;
 
   /* Backgrounds */
   --background: #FAFAFA;
@@ -29,7 +29,7 @@
   /* Border & Input */
   --border: #E2E8F0;
   --input: #E2E8F0;
-  --ring: #7C3AED;
+  --ring: #D97706;
 
   /* Semantic */
   --success: #10B981;
@@ -46,20 +46,20 @@
   --secondary-foreground: #0F172A;
 
   /* Chart */
-  --chart-1: #7C3AED;
+  --chart-1: #D97706;
   --chart-2: #10B981;
   --chart-3: #3B82F6;
-  --chart-4: #F59E0B;
+  --chart-4: #134E4A;
   --chart-5: #EF4444;
 
   /* Sidebar */
-  --sidebar: #1E1B4B;
-  --sidebar-foreground: #E0E7FF;
-  --sidebar-accent: #312E81;
+  --sidebar: #134E4A;
+  --sidebar-foreground: #CCFBF1;
+  --sidebar-accent: #115E59;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #3730A3;
-  --sidebar-ring: #7C3AED;
-  --sidebar-primary: #A78BFA;
+  --sidebar-border: #0F766E;
+  --sidebar-ring: #D97706;
+  --sidebar-primary: #5EEAD4;
   --sidebar-primary-foreground: #FFFFFF;
 
   /* Radius */
@@ -67,13 +67,13 @@
 }
 
 .dark {
-  --primary: #A78BFA;
-  --primary-foreground: #0F172A;
-  --primary-hover: #8B5CF6;
+  --primary: #5EEAD4;
+  --primary-foreground: #042F2E;
+  --primary-hover: #2DD4BF;
 
-  --accent: #A78BFA;
-  --accent-foreground: #0F172A;
-  --accent-hover: #8B5CF6;
+  --accent: #FBBF24;
+  --accent-foreground: #042F2E;
+  --accent-hover: #F59E0B;
 
   --background: #0F172A;
   --foreground: #F8FAFC;
@@ -87,7 +87,7 @@
 
   --border: #334155;
   --input: #334155;
-  --ring: #A78BFA;
+  --ring: #5EEAD4;
 
   --success: #10B981;
   --success-foreground: #FFFFFF;
@@ -101,10 +101,10 @@
   --secondary: #1E293B;
   --secondary-foreground: #F8FAFC;
 
-  --chart-1: #A78BFA;
+  --chart-1: #FBBF24;
   --chart-2: #34D399;
   --chart-3: #60A5FA;
-  --chart-4: #FBBF24;
+  --chart-4: #5EEAD4;
   --chart-5: #F87171;
 
   --sidebar: #0F172A;
@@ -112,9 +112,9 @@
   --sidebar-accent: #1E293B;
   --sidebar-accent-foreground: #F8FAFC;
   --sidebar-border: #334155;
-  --sidebar-ring: #A78BFA;
-  --sidebar-primary: #A78BFA;
-  --sidebar-primary-foreground: #0F172A;
+  --sidebar-ring: #5EEAD4;
+  --sidebar-primary: #5EEAD4;
+  --sidebar-primary-foreground: #042F2E;
 }
 
 @theme inline {
